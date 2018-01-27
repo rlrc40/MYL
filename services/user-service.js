@@ -1,7 +1,8 @@
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const urlDB = "mongodb://localhost/myl";
 
-const db = mongoose.connect('mongodb://localhost/talketin',  (err, res) => {  
+const db = mongoose.connect(urlDB,  (err, res) => {
     if (err) {
         return console.log("Error al conectar con la base de datos");
     }
@@ -10,20 +11,23 @@ const db = mongoose.connect('mongodb://localhost/talketin',  (err, res) => {
 });
 
 var service = {};
-// service.getAll = getAll;
+service.getAll = getAll;
 // service.getById = getById;
 service.create = validateUser;
 // service.update = update;
-// service.delete = _delete;
+service.delete = _delete;
 
 module.exports = service;
 
-// BBDD connection
-// mongoose.connection('mongodb://localhost:27017/talketin', (err, res) => {  
-//     if (err) throw err
-//     console.log('Conexión con la base de datos establecida');
 
-// })
+function getAll(req, res) {
+    User.find(
+      {}, (err, users) => {
+            if (err) res.send(500, err.name + ': ' + err.message);
+            if (!users) res.status(404).send({message: "Not found users"});
+            res.status(200).send({users});
+    })
+}
 
 function create(req, res) {
     let userParam = req.body;
@@ -35,10 +39,10 @@ function create(req, res) {
     user.age = userParam.age;
     user.created_at = Date.now();
 
-    console.log('Create user: ', user); 
+    console.log('Create user: ', user);
 
     user.save((err, userStored) => {
-        if (err) res.status(500).send({message: 'Error al almacenar el usuario en la base de datos'});
+        if (err) res.status(500).send({message: 'Failed at store user in the database'});
 
         res.status(200).send({user: userStored});
     });
@@ -48,18 +52,29 @@ function validateUser(req, res) {
     console.log('Validate user: ', req.body.email);
     let email = req.body.email;
 
-    // validation
     User.findOne(
-        { email: email },
-        function (err, user) {
+        { email: email }, (err, user) => {
             if (err) res.send(400, err.name + ': ' + err.message);
 
             if (user) {
-                // email already exists
                 res.send(412, 'Email "' + email + '" is already taken');
             } else {
-                this.create(req.body);
+                create(req, res);
             }
         }
     );
+}
+
+//TO DO
+function _delete(req, res) {
+  let userId = req.params.userId;
+
+  User.findById(userId, (err, user) => {
+    if (err) res.status(404).send({message: "Error at deleting user: " + userId})
+
+    user.remove(err => {
+      if (err) res.status(500).send({message: "Error at deleting user: " + userId})
+      res.status(200).send({message: "User has been deleted"})
+    })
+  })
 }
