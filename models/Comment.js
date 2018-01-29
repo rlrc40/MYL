@@ -6,7 +6,7 @@ const CommentSchema = new mongoose.Schema({
 	from: User,
 	text: String,
   likes: Number,
-  answers: [Comment],
+  answers: [this],
   created_at: { type: Date, default: Date.now },
 });
 

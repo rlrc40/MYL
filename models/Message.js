@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const User = require("./User");
 
-const MessagenSchema = new mongoose.Schema({
+
+
+const MessageSchema = new mongoose.Schema({
 	from: User,
 	to: User,
 	text: String,
-	answers: [Message],
+	answers: [this],
   created_at: { type: Date, default: Date.now },
 });
 

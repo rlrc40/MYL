@@ -1,19 +1,21 @@
-const mongoose = require('mongoose');
-const User = require("./User");
-const Comment = require("./Comment");
-const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"];
+const mongoose = require('mongoose')
+const User = require("./User")
+const Comment = require("./Comment")
+const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"]
 
-const UserSchema = require('mongoose').model('User').schema
-const CommentSchema = require('mongoose').model('Comment').schema
+const CommentSchema = mongoose.model('Comment').schema
 
 const GroupSchema = new mongoose.Schema({
-  creator: UserSchema,
+  creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
 	name: String,
 	description: String,
 	avatar: String,
-	languages: { type: String, enum: LANGUAGES },
+	languages: [{ type: String, enum: LANGUAGES }],
 	comments: [CommentSchema],
-	members: [UserSchema],
+	members: [User],
   created_at: { type: Date, default: Date.now },
 });
 
