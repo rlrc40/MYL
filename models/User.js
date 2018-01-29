@@ -1,13 +1,7 @@
-const mongoose = require('mongoose');
-const Group = require("./Group");
-const Notification = require("./Notification");
-const Message = require("./Message");
-const GENDERS = ["M", "F"];
-const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"];
-
-const GroupSchema = require('mongoose').model('Group').schema
-const NotificationSchema = require('mongoose').model('Notification').schema
-const MessageSchema = require('mongoose').model('Message').schema
+const mongoose = require('mongoose')
+const ObjectId = mongoose.Schema.Types.ObjectId
+const GENDERS = ["M", "F"]
+const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"]
 
 const UserSchema = new mongoose.Schema({
   name: String,
@@ -21,7 +15,7 @@ const UserSchema = new mongoose.Schema({
 	languagesToLearn: [{ type: String, enum: LANGUAGES }],
 	level: Number,
 	languageLevel: Number,
-	groups: [GroupSchema],
+	groups: [ObjectId],
 	receivedLikes: Number,
 	givenLikes: Number,
 	facebookAddress: String,
@@ -37,11 +31,11 @@ const UserSchema = new mongoose.Schema({
 	instagramAccount: String,
 	twitterAccount: String,
 	skype: String,
-	notifications: [NotificationSchema],
-  messages: [MessageSchema],
+	notifications: [ObjectId],
+  messages: [ObjectId],
 	contadorWithoutMessages: Number,
 	contadorMessages: Number,
   created_at: { type: Date, default: Date.now },
-});
+})
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User', UserSchema)

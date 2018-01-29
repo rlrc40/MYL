@@ -1,22 +1,16 @@
 const mongoose = require('mongoose')
-const User = require("./User")
-const Comment = require("./Comment")
 const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"]
-
-const CommentSchema = mongoose.model('Comment').schema
+const ObjectId = mongoose.Schema.Types.ObjectId
 
 const GroupSchema = new mongoose.Schema({
-  creator: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
+  creator: ObjectId,
 	name: String,
 	description: String,
 	avatar: String,
 	languages: [{ type: String, enum: LANGUAGES }],
-	comments: [CommentSchema],
-	members: [User],
+	comments: [ObjectId],
+	members: [ObjectId],
   created_at: { type: Date, default: Date.now },
-});
+})
 
-module.exports = mongoose.model('Group', GroupSchema);
+module.exports = mongoose.model('Group', GroupSchema)

@@ -1,13 +1,12 @@
-const mongoose = require('mongoose');
-const User = require("./User");
-const Comment = require("./Comment");
+const mongoose = require('mongoose')
+const ObjectId = mongoose.Schema.Types.ObjectId
 
 const CommentSchema = new mongoose.Schema({
-	from: User,
+	from: ObjectId,
 	text: String,
   likes: Number,
-  answers: [this],
+  answers: [ObjectId],
   created_at: { type: Date, default: Date.now },
-});
+})
 
-module.exports = mongoose.model('Comment', CommentSchema);
+module.exports = mongoose.model('Comment', CommentSchema)

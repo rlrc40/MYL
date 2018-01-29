@@ -1,14 +1,12 @@
-const mongoose = require('mongoose');
-const User = require("./User");
-
-
+const mongoose = require('mongoose')
+const ObjectId = mongoose.Schema.Types.ObjectId
 
 const MessageSchema = new mongoose.Schema({
-	from: User,
-	to: User,
+	from: ObjectId,
+	to: ObjectId,
 	text: String,
-	answers: [this],
+	answers: [ObjectId],
   created_at: { type: Date, default: Date.now },
-});
+})
 
-module.exports = mongoose.model('Message', MessageSchema);
+module.exports = mongoose.model('Message', MessageSchema)

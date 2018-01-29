@@ -1,11 +1,11 @@
-const mongoose = require('mongoose');
-const User = require("./User");
+const mongoose = require('mongoose')
 const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"]
+const ObjectId = mongoose.Schema.Types.ObjectId
 
 
 
 const MeetingSchema = new mongoose.Schema({
-  	creator: User,
+  	creator: ObjectId,
   	avatar: String,
   	title: String,
   	locate: String,
@@ -13,6 +13,6 @@ const MeetingSchema = new mongoose.Schema({
   	description: String,
   	languages: [{ type: String, enum: LANGUAGES }],
   	followers: Number
-});
+})
 
-module.exports = mongoose.model('Meeting', MeetingSchema);
+module.exports = mongoose.model('Meeting', MeetingSchema)
