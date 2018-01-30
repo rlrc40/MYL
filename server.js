@@ -11,6 +11,7 @@ app.use(bodyParser.json())
 
 // controllers
 app.use('/users', require('./controllers/users-controller'))
+app.use('/groups', require('./controllers/group-controller'))
 
 
 app.listen(port, () => {
