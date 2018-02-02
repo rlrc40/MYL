@@ -1,40 +1,169 @@
-var supertest = require("supertest");
-var should = require("should");
+//During the test the env variable is set to test
+process.env.NODE_ENV = 'test'
 
-var server = supertest.agent("http://localhost:3000");
+let mongoose = require("mongoose")
+let User = require('../models/User')
 
-describe("SAMPLE unit test", function(){
+//Require the dev-dependencies
+let chai = require('chai')
+let chaiHttp = require('chai-http')
+let server = require('../server')
+let should = chai.should()
 
-    it("should create user correctly", function(){
-  
-      server
-      .post("/users/register")
-      .send({name: "Raul", email: "raul@email.com", description: "blablabla", age: 24})
-      .expect("Content-type",/json/)
-      .expect(200) 
-      .expect({name: "Raul", email: "raul@email.com", description: "blablabla", age: 24}) 
-      .end(function(err, res) {
-        if (err) throw err;
-      });
-    });  
-});
+const getUser = (email) => new User({
+  name: "Test",
+  email: email,
+  description: "blablabla",
+  age: 24,
+  gender: 'F',
+  occupation: '',
+  password: '',
+  nativeLanguage: 'Spanish',
+  languagesToLearn: ['English'],
+  facebookAddress: [],
+  facebookAvatar: '',
+  facebookLikedPages: [],
+  facebookGroups: [],
+  facebookMusic: [],
+  facebookFilm: [],
+  facebookBooks: [],
+  facebookSeries: [],
+  facebookSports: [],
+  facebookFriends: [],
+  instagramAccount: 'instagramAccount',
+  twitterAccount: 'twitterAccount',
+  skype: 'testSkype'
+})
 
-describe("SAMPLE unit test", function(){
+chai.use(chaiHttp)
 
-  it("should return an error because the duplicated email", function(){
+describe('Users', () => {
+    beforeEach((done) => { //Before each test we empty the database
+        User.remove({}, (err) => {
+           done()
+        })
+    })
+/*
+  * Test the /GET route
+  */
+  describe('/GET users', () => {
+      it('it should GET all the users', (done) => {
+        let user = getUser('test@email.xom')
+        chai.request(server)
+            .get('/users')
+            .end((err, res) => {
+                res.should.have.status(200)
+                res.body.should.be.a('array')
+                res.body.length.should.be.eql(0)
+              done()
+            })
+      })
+  })
 
-    server
-    .post("/users/register")
-    .send({name: "Raul", email: "raul@email.com", description: "blablabla", age: 24});
+  /*
+  * Test the /POST route
+  */
+  describe('/POST user', () => {
+      it('it should CREATE a new user', (done) => {
+        let user = getUser('test2@email.xom')
+        chai.request(server)
+            .post('/users/register')
+            .send(user)
+            .end((err, res) => {
+                res.should.have.status(200)
+                res.body.should.be.a('object')
+                res.body.message.should.to.be.eql('User Test has been created')
+                res.body.user.should.be.a('object')
+                res.body.user.should.have.property('name')
+                res.body.user.should.have.property('email')
+                res.body.user.should.have.property('description')
+                res.body.user.should.have.property('age')
+              done()
+            })
+      })
+  })
 
-    server
-    .post("/users/register")
-    .send({name: "Raul", email: "raul@email.com", description: "blablabla", age: 24})
-    .expect("Content-type",/json/)
-    .expect(412) 
-    .expect("Email raul@email.com is already taken")
-    .end(function(err, res) {
-      if (err) throw err;
-    });
-  });  
-});
+  // TODO
+    describe('/POST user whit existing email', () => {
+      it('it should FAIL at CREATE the new user', (done) => {
+        let user = getUser('test3@email.xom')
+        user.save((err, user) => {
+          chai.request(server)
+              .post('/users/register')
+              .send(user)
+              .end((err, res) => {
+                  res.should.have.status(412)
+                  res.body.should.be.a('object')
+                  res.body.message.should.to.be.eql('Email ' + user.email + ' is already taken')
+                done()
+              })
+            })
+      })
+    })
+
+
+    /*
+  * Test the /GET/:id route
+  */
+  describe('/GET/:id user', () => {
+      it('it should GET a user by the given id', (done) => {
+        let user = getUser('test4@email.xom')
+        user.save((err, user) => {
+            chai.request(server)
+            .get('/users/' + user.id)
+            .end((err, res) => {
+                res.should.have.status(200)
+                res.body.should.be.a('object')
+                res.body.should.have.property('name')
+                res.body.should.have.property('email')
+                res.body.should.have.property('description')
+                res.body.should.have.property('age')
+                res.body.should.have.property('_id').eql(user.id)
+              done()
+            })
+        })
+
+      })
+  })
+
+/*
+  * Test the /PUT/:id route
+  */
+  describe('/PUT/:id user', () => {
+      it('it should UPDATE a user given the id', (done) => {
+        let user = getUser('test5@email.xom')
+        user.save((err, user) => {
+                chai.request(server)
+                .put('/users/' + user.id)
+                .send({email: 'teest5@mail.com'})
+                .end((err, res) => {
+                    res.should.have.status(200)
+                    res.body.should.be.a('object')
+                    res.body.should.have.property('message').eql('User ' + user.name + ' has been updated')
+                    res.body.user.should.have.property('email').eql('teest5@mail.com')
+                  done()
+                })
+          })
+      })
+  })
+
+/*
+  * Test the /DELETE/:id route
+  */
+  describe('/DELETE/:id user', () => {
+      it('it should DELETE a user given the id', (done) => {
+        let user = getUser('test6@mail.xom')
+        user.save((err, user) => {
+                chai.request(server)
+                .delete('/users/' + user.id)
+                .end((err, res) => {
+                    res.should.have.status(200)
+                    res.body.should.be.a('object')
+                    res.body.should.have.property('message').eql('User has been deleted')
+                  done()
+                })
+          })
+      })
+  })
+
+})
