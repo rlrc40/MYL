@@ -26,7 +26,7 @@ function getAll(req, res) {
       {}, (err, users) => {
             if (err) res.send(500).send(err.name + ': ' + err.message)
             if (!users) res.status(404).send({message: "Not found users"})
-            res.status(200).send({users})
+            res.status(200).send(users)
     })
 }
 
@@ -36,7 +36,7 @@ function getById(req, res) {
         userId, (err, user) => {
             if (err) res.send(500).send(err.name + ': ' + err.message)
             if (!user) res.status(404).send({message: "User not found"})
-            else res.status(200).send({user})
+            else res.status(200).send(user)
     })
 }
 
@@ -68,7 +68,7 @@ function create(req, res) {
   	user.twitterAccount = userParam.twitterAccount
   	user.skype = userParam.skype
   	user.notifications = []
-    user.messages = 0
+    user.messages = []
   	user.contadorWithoutMessages = 0
   	user.contadorMessages = 0
   	user.level = 0
@@ -84,18 +84,14 @@ function create(req, res) {
 }
 
 function validateUser(req, res) {
-    console.log('Validate user: ', req.body.email)
     let email = req.body.email
 
     User.findOne(
         { email: email }, (err, user) => {
-            if (err) res.send(400).send(err.name + ': ' + err.message)
 
-            if (user) {
-                res.send(412).send({message: 'Email ' + email + ' is already taken'})
-            } else {
-                create(req, res)
-            }
+            if (user) res.status(412).send({message: 'Email ' + email + ' is already taken'})
+            else if (err) res.status(400).send(err.name + ': ' + err.message)
+            else create(req, res)
         }
     )
 }
@@ -104,15 +100,15 @@ function update(req, res) {
   let userId = req.params.userId
   let update = req.body
 
-  User.findByIdAndUpdate(userId, update, (err, userUpdated) => {
-    if (err || !userUpdated) res.send(500).send('Error at update user: ' + err.message)
-
-    res.status(200).send({message: 'User ' + userUpdated.name + ' has been updated'})
+  User.findByIdAndUpdate(userId, update, {new: true}, (err, userUpdated) => {
+    if (err || !userUpdated) res.status(500).send({message: 'Error at update user: ' + err.message})
+    else res.status(200).send({message: 'User ' + userUpdated.name + ' has been updated', user: userUpdated})
   })
 }
 
 function _delete(req, res) {
   let userId = req.params.userId
+  console.log("Entroo: ", userId)
 
   User.findById(userId, (err, user) => {
     if (err || !user) res.status(404).send({message: "Error at deleting user: " + userId + " not found"})
