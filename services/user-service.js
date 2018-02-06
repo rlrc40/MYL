@@ -24,8 +24,8 @@ module.exports = service
 function getAll(req, res) {
     User.find(
       {}, (err, users) => {
-            if (err) res.send(500).send(err.name + ': ' + err.message)
-            if (!users) res.status(404).send({message: "Not found users"})
+            if (err) return res.status(500).send(err.name + ': ' + err.message)
+            if (!users) return res.status(404).send({message: "Not found users"})
             res.status(200).send(users)
     })
 }
@@ -34,9 +34,10 @@ function getById(req, res) {
     let userId = req.params.userId
     User.findById(
         userId, (err, user) => {
-            if (err) res.send(500).send(err.name + ': ' + err.message)
-            if (!user) res.status(404).send({message: "User not found"})
-            else res.status(200).send(user)
+            if (err) return res.status(500).send(err.name + ': ' + err.message)
+            if (!user) return res.status(404).send({message: "User not found"})
+
+            res.status(200).send(user)
     })
 }
 
@@ -78,8 +79,9 @@ function create(req, res) {
   	user.givenLikes = 0
 
     user.save((err, userStored) => {
-        if (err) res.status(500).send({message: 'Failed at store user in the database'})
-        else res.status(200).send({message: 'User ' + userParam.name + ' has been created', user: userStored})
+        if (err) return res.status(500).send({message: 'Failed at store user in the database'})
+
+        res.status(200).send({message: 'User ' + userParam.name + ' has been created', user: userStored})
     })
 }
 
@@ -89,9 +91,10 @@ function validateUser(req, res) {
     User.findOne(
         { email: email }, (err, user) => {
 
-            if (user) res.status(412).send({message: 'Email ' + email + ' is already taken'})
-            else if (err) res.status(400).send(err.name + ': ' + err.message)
-            else create(req, res)
+            if (user) return res.status(412).send({message: 'Email ' + email + ' is already taken'})
+            else if (err) return res.status(400).send(err.name + ': ' + err.message)
+
+            create(req, res)
         }
     )
 }
@@ -101,19 +104,22 @@ function update(req, res) {
   let update = req.body
 
   User.findByIdAndUpdate(userId, update, {new: true}, (err, userUpdated) => {
-    if (err || !userUpdated) res.status(500).send({message: 'Error at update user: ' + err.message})
-    else res.status(200).send({message: 'User ' + userUpdated.name + ' has been updated', user: userUpdated})
+    if (err) return res.status(500).send({message: 'Error at update user: ' + err.message})
+    if (!userUpdated) return res.status(404).send({message: 'User not found'})
+
+    res.status(200).send({message: 'User ' + userUpdated.name + ' has been updated', user: userUpdated})
   })
 }
 
 function _delete(req, res) {
   let userId = req.params.userId
-  console.log("Entroo: ", userId)
 
   User.findById(userId, (err, user) => {
-    if (err || !user) res.status(404).send({message: "Error at deleting user: " + userId + " not found"})
+    if (err) return res.status(500).send({message: 'Error at update user: ' + err.message})
+    if (!user) return res.status(404).send({message: "Error at deleting user: " + userId + " not found"})
+
     user.remove(err => {
-        if (err) res.status(500).send({message: "Error at deleting user: " + userId})
+        if (err) return res.status(500).send({message: "Error at deleting user: " + userId})
         res.status(200).send({message: "User has been deleted"})
     })
   })
