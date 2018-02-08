@@ -82,8 +82,6 @@ describe('Users', () => {
         })
     })
   })
-
-
   describe('/POST user with existing email', () => {
     it('it should FAIL at CREATE the new user', (done) => {
       let user = getUser('test3@email.xom')
@@ -100,7 +98,6 @@ describe('Users', () => {
       })
     })
   })
-
 
   /*
    * Test the /GET/:id route
