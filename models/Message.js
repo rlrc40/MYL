@@ -9,7 +9,7 @@ const MessageSchema = new mongoose.Schema({
 		required: true
 	},
 	answers: [ObjectId],
-  created_at: { type: Date, default: Date.now },
+  created_at: { type: Date, default: Date.now }
 })
 
 module.exports = mongoose.model('Message', MessageSchema)

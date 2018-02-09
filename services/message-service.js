@@ -14,12 +14,25 @@ const db = mongoose.connect(urlDB,  (err, res) => {
 
 var service = {}
 service.getMessageById = getMessageById
+service.getMessagesByUserId = getMessagesByUserId
 service.create = create
 service.update = update
 service._delete = _delete
 
 module.exports = service
 
+
+
+function getMessagesByUserId(req, res) {
+  let userId = req.params.userId
+  Message.find({ $or: [{ "from": userId}, { "to": userId}]}, (err, messages) => {
+    if (err) return res.status(500).send(err.name + ': ' + err.message)
+    if (!messages) return res.status(404).send({
+      message: "Not found messages"
+    })
+    res.status(200).send(messages)
+  })
+}
 
 function create(req, res) {
     let messageParam = req.body
