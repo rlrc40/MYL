@@ -4,7 +4,10 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 const MessageSchema = new mongoose.Schema({
 	from: ObjectId,
 	to: ObjectId,
-	text: String,
+	text: {
+		type: String,
+		required: true
+	},
 	answers: [ObjectId],
   created_at: { type: Date, default: Date.now },
 })
