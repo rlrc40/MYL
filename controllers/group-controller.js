@@ -7,7 +7,7 @@ module.exports = router
 // routes
 router.post('/register', register)
 router.get('/', getAllGroups)
-router.get('/', getGroupMembers)
+router.get('/members/:groupId', getGroupMembers)
 router.get('/:groupId', getGroupById)
 router.put('/:groupId', update)
 router.delete('/:groupId', _delete)

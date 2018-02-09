@@ -4,7 +4,10 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 
 const GroupSchema = new mongoose.Schema({
   creator: ObjectId,
-	name: String,
+	name: {
+    type: String,
+    required: true
+  },
 	description: String,
 	avatar: String,
 	languages: [{ type: String, enum: LANGUAGES }],
