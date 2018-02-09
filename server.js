@@ -11,6 +11,9 @@ app.use(bodyParser.json())
 
 // controllers
 app.use('/users', require('./controllers/users-controller'))
+app.use('/comments', require('./controllers/comments-controller'))
+app.use('/groups', require('./controllers/groups-controller'))
+app.use('/messages', require('./controllers/messages-controller'))
 
 
 app.listen(port, () => {
