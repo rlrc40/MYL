@@ -44,6 +44,20 @@ describe('Messages', () => {
     })
   })
 
+  describe('/POST a bad message', () => {
+    it('it should NOT CREATE and send a message', (done) => {
+      let message = getMessage('')
+      chai.request(server)
+        .post('/messages/send')
+        .send(message)
+        .end((err, res) => {
+          res.should.have.status(500)
+          res.body.should.have.property('information').eql('Error when sending the message to the database')
+          done()
+        })
+    })
+  })
+
   describe('/GET/:id message', () => {
     it('it should GET a message by the given id', (done) => {
       let message = getMessage('Test text.')
@@ -64,7 +78,7 @@ describe('Messages', () => {
     })
   })
 
-  describe('/GET/:idUser messages', () => {
+  describe('/GET/user/:idUser messages', () => {
     it('it should GET messages by the given idUser', (done) => {
       let userId = "5a78800f2b225224f01d167a"
       let m1 = new Message({
@@ -122,12 +136,12 @@ describe('Messages', () => {
   describe('/PUT/:id message (NOT FOUND)', () => {
     it('it should NOT UPDATE a message given the id', (done) => {
       chai.request(server)
-        .put('/messages/5b78800f2a225224f01il11b')
+        .put('/messages/5a7dd492e6571a3e68d430f7')
         .send({text: "text update"})
         .end((err, res) => {
           res.should.have.status(404)
           res.body.should.be.a('object')
-          res.body.should.have.property('information').eql("Error updating message: 5b78800f2a225224f01il11b not found")
+          res.body.should.have.property('information').eql("Message not found")
           done()
         })
     })
@@ -149,14 +163,14 @@ describe('Messages', () => {
     })
   })
 
-  describe('/DELETE/:id unexistent message', () => {
+  describe('/DELETE/:id message NOT FOUND', () => {
     it('it should fail at DELETE a message given the id', (done) => {
       chai.request(server)
-        .delete('/messages/' + '5b78800f2a225224f01il11b')
+        .delete('/messages/' + '5a7dd492e6571a3e68d430f7')
         .end((err, res) => {
           res.should.have.status(404)
           res.body.should.be.a('object')
-          res.body.should.have.property('information').eql("Error deleting message: 5b78800f2a225224f01il11b not found")
+          res.body.should.have.property('information').eql("Message not found")
           done()
         })
     })
