@@ -25,7 +25,7 @@ const getUser = (email) => new User({
   facebookLikedPages: [],
   facebookGroups: [],
   facebookMusic: [],
-  facebookFilm: [],
+  facebookFilms: [],
   facebookBooks: [],
   facebookSeries: [],
   facebookSports: [],
