@@ -7,7 +7,6 @@ module.exports = router
 // routes
 router.post('/send', send)
 router.get('/:messageId', getMessageById)
-router.get('/user/:userId', getMessagesByUserId)
 router.put('/:messageId', update)
 router.delete('/:messageId', _delete)
 
@@ -21,10 +20,6 @@ function send(req, res) {
 // GET
 function getMessageById(req, res) {
     messageService.getMessageById(req, res)
-}
-
-function getMessagesByUserId(req, res) {
-    messageService.getMessagesByUserId(req, res)
 }
 
 // PUT
