@@ -49,12 +49,10 @@ const UserSchema = new mongoose.Schema({
     min: 0
   },
   receivedLikes: {
-    type: Number,
-    min: 0
+    [ObjectId]
   },
   givenLikes: {
-    type: Number,
-    min: 0
+    [ObjectId]
   },
   address: {
     type: String,

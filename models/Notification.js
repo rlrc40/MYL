@@ -12,6 +12,11 @@ const NotificationSchema = new mongoose.Schema({
     type: String,
     required: 'url is required'
   },
+  text: {
+    type: String,
+    required: 'text is required',
+    max: 100
+  },
   created_at: {
     type: Date,
     default: Date.now
