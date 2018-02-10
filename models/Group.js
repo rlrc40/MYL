@@ -4,16 +4,25 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 
 const GroupSchema = new mongoose.Schema({
   creator: ObjectId,
-	name: {
+  name: {
     type: String,
-    required: true
+    required: true,
+    max: 100
   },
-	description: String,
-	avatar: String,
-	languages: [{ type: String, enum: LANGUAGES }],
-	comments: [ObjectId],
-	members: [ObjectId],
-  created_at: { type: Date, default: Date.now },
+  description: {
+    type: String,
+    max: 160
+  },
+  avatar: String,
+  languages: [{
+    type: String,
+    enum: LANGUAGES
+  }],
+  members: [ObjectId],
+  created_at: {
+    type: Date,
+    default: Date.now
+  },
 })
 
 module.exports = mongoose.model('Group', GroupSchema)

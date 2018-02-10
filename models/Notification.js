@@ -3,9 +3,19 @@ const TYPES = ["message", "comment", "new-conexion", "like", "request-access-gro
 
 
 const NotificationSchema = new mongoose.Schema({
-	type: { type: String, enum: TYPES },
-	url: String,
-  created_at: { type: Date, default: Date.now },
+  type: {
+    type: String,
+    enum: TYPES,
+    required: 'type is required'
+  },
+  url: {
+    type: String,
+    required: 'url is required'
+  },
+  created_at: {
+    type: Date,
+    default: Date.now
+  }
 })
 
 module.exports = mongoose.model('Notification', NotificationSchema)
