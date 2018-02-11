@@ -13,7 +13,10 @@ const GroupSchema = new mongoose.Schema({
     type: String,
     max: 160
   },
-  avatar: String,
+  avatar: {
+    type: String,
+    match: [/.*\.(jpg|jpeg|png)$/gim, 'Only valid .jpeg or .png files.']
+  },
   languages: [{
     type: String,
     enum: LANGUAGES
