@@ -8,6 +8,8 @@ module.exports = router
 router.post('/register', register)
 router.get('/', getAll)
 router.get('/:userId', getById)
+router.get('/group/:groupId', getUsersByGroupId)
+router.get('/connections/:userId', getUserConnections)
 router.put('/:userId', update)
 router.delete('/:userId', _delete)
 
@@ -25,6 +27,14 @@ function getAll(req, res) {
 
 function getById(req, res) {
     userService.getById(req, res)
+}
+
+function getUsersByGroupId(req, res) {
+    userService.getUsersByGroupId(req, res)
+}
+
+function getUserConnections(req, res) {
+    userService.getUserConnections(req, res)
 }
 
 // PUT

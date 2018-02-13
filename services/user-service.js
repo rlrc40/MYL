@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Group = require('../models/Group')
 const mongoose = require('mongoose')
 const urlDB = "mongodb://localhost/myl"
 
@@ -12,6 +13,8 @@ const db = mongoose.connect(urlDB, (err, res) => {
 var service = {}
 service.getAll = getAll
 service.getById = getById
+service.getUsersByGroupId = getUsersByGroupId
+service.getUserConnections = getUserConnections
 service.create = validateUser
 service.update = update
 service._delete = _delete
@@ -39,6 +42,40 @@ function getById(req, res) {
       })
 
       res.status(200).send(user)
+    })
+}
+
+function getUsersByGroupId(req, res) {
+  let groupId = req.params.groupId
+  User.find({
+    groups: groupId
+  }, (err, users) => {
+    if (err) return res.status(500).send(err.name + ': ' + err.message)
+    if (!users) return res.status(404).send({
+      message: "Users not found"
+    })
+
+    res.status(200).send(users)
+  })
+}
+
+function getUserConnections(req, res) {
+  let userId = req.params.userId
+  User.findById(
+    userId, (err, user) => {
+      if (err) return res.status(500).send(err.name + ': ' + err.message)
+      if (!user) return res.status(404).send({
+        message: "User not found"
+      })
+
+      User.find({ _id: user.connections }, (err, users) => {
+        if (err) return res.status(500).send(err.name + ': ' + err.message)
+        if (!users) return res.status(404).send({
+          message: "Users not found "
+        })
+        res.status(200).send(users)
+      })
+
     })
 }
 
@@ -76,8 +113,9 @@ function create(req, res) {
   user.level = 0
   user.languageLevel = 0
   user.groups = []
-  user.receivedLikes = 0
-  user.givenLikes = 0
+  connections = []
+  connectionRequests = []
+  myConnectionRequests = []
 
   user.save((err, userStored) => {
     if (err) return res.status(500).send({
@@ -142,6 +180,23 @@ function _delete(req, res) {
     user.remove(err => {
       if (err) return res.status(500).send({
         message: "Error at deleting user: " + userId
+      })
+      user.groups.map(function(groupId) {
+        Group.findById(
+          groupId, (err, group) => {
+            if (err) return res.send(500).send(err.name + ': ' + err.message)
+            if (!group) return res.status(404).send({message: "Group not found"})
+
+            let index = group.members.indexOf(user.id)
+            let membersUpdate = group.members
+            if (index > -1) {
+              membersUpdate.splice(index, 1)
+            }
+            Group.findByIdAndUpdate(groupId, {members: membersUpdate}, (err, groupUpdated) => {
+              if (err || !groupUpdated) res.send(500).send('Error updating the group: ' + err.message)
+
+            })
+          })
       })
       res.status(200).send({
         message: "User has been deleted"
