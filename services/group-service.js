@@ -14,6 +14,7 @@ const db = mongoose.connect(urlDB,  (err, res) => {
 var service = {}
 service.getAllGroups = getAllGroups
 service.getGroupById = getGroupById
+service.getGroupsByUserId = getGroupsByUserId
 service.getGroupMembers = getGroupMembers
 service.create = validateGroupName
 service.update = update
@@ -25,15 +26,31 @@ module.exports = service
 function getAllGroups(req, res) {
     Group.find(
       {}, (err, groups) => {
-            if (err) return res.send(500).send(
+            if (err) return res.status(500).send(
               err.name + ': ' + err.message
             )
-            if (!groups) return res.status(404).send(
-              {message: "No groups found"}
+            if (!groups) return res.status(404).send({
+              message: "No groups found"
+            })
+            res.status(200).send({
+              groups
+            })
+    })
+}
+
+function getGroupsByUserId(req, res) {
+    let userId = req.params.userId
+    Group.find(
+      { members: userId },(err, groups) => {
+            if (err) return res.status(500).send(
+              err.name + ': ' + err.message
             )
-            res.status(200).send(
-              {groups}
-            )
+            if (!groups) return res.status(404).send({
+              message: "Groups not found"
+            })
+            res.status(200).send({
+              groups
+            })
     })
 }
 
@@ -41,15 +58,15 @@ function getGroupById(req, res) {
     let groupId = req.params.groupId
     Group.findById(
         groupId, (err, group) => {
-            if (err) return res.send(500).send(
+            if (err) return res.status(500).send(
               err.name + ': ' + err.message
             )
-            if (!group) return res.status(404).send(
-              {message: "Group not found"}
-            )
-            res.status(200).send(
-              {group}
-            )
+            if (!group) return res.status(404).send({
+              message: "Group not found"
+            })
+            res.status(200).send({
+              group
+            })
     })
 }
 
@@ -57,14 +74,11 @@ function getGroupMembers(req, res) {
     let groupId = req.params.groupId
     Group.findById(
         groupId, 'members', (err, members) => {
-            if (err) return res.send(500).send(
+            if (err) return res.status(500).send(
               err.name + ': ' + err.message
             )
-            if (!group) return res.status(404).send(
-              {message: "Group not found"}
-            )
             res.status(200).send(
-              {members}
+              members
             )
     })
 }
@@ -78,34 +92,47 @@ function create(req, res) {
     group.description = groupParam.description
     group.avatar = groupParam.avatar
     group.languages = groupParam.languages
-    group.comments = groupParam.comments
-    group.members = groupParam.members
+    group.members = [groupParam.creator]
     group.created_at = Date.now()
 
 
     group.save((err, groupStored) => {
-        if (err) return res.status(500).send(
-          {message: 'Error when saving the group in the database'}
-        )
-        res.status(200).send(
-          {message: 'Group ' + groupParam.name + ' has been created', group: groupStored}
-        )
+        if (err) return res.status(500).send({
+          message: 'Error when saving the group in the database'
+        })
+
+        let creatorId = groupStored.creator
+
+        User.findByIdAndUpdate(creatorId,
+          { $push: { groups: groupStored.id} },
+           (err, memberUpdated) => {
+              if (err) return res.status(500).send({
+                message: 'Error updating member: ' + err.message
+              })
+              if (!memberUpdated) return res.status(404).send({
+                message: 'Member not found'
+              })
+            })
+
+        res.status(200).send({
+          message: 'Group ' + groupParam.name + ' has been created',
+          group: groupStored
+        })
     })
 }
 
 function validateGroupName(req, res) {
-    console.log('Validate group name: ', req.body.name)
     let name = req.body.name
 
     Group.findOne(
-        {name: name}, (err, group) => {
-            if (err) return res.status(400).send(
+        {name}, (err, group) => {
+            if (group) return res.status(412).send({
+              message: 'Group name is already taken'
+            })
+            if (err) return res.status(666).send(
               err.name + ': ' + err.message
             )
-            if (group) return res.status(412).send(
-              {message: 'Group name ' + name + ' is already taken'}
-            )
-            create(req, res)
+            else create(req, res)
 
         }
     )
@@ -119,12 +146,12 @@ function update(req, res) {
       if (err) return res.status(500).send(
         'Error updating the group: ' + err.message
       )
-      if (!groupUpdated) return res.status(404).send(
-        'Error updating the group: group not found'
-      )
-      res.status(200).send(
-        {message: 'Group ' + groupUpdated.name + ' has been updated'}
-      )
+      if (!groupUpdated) return res.status(404).send({
+        message: 'Group not found'
+      })
+      res.status(200).send({
+        message: 'Group has been updated'
+      })
     })
 }
 
@@ -132,19 +159,34 @@ function _delete(req, res) {
   let groupId = req.params.groupId
 
   Group.findById(groupId, (err, group) => {
-    if (err) return res.status(500).send(
-      {message: "Error deleting group: " + groupId}
-    )
-    if (!group) return res.status(404).send(
-      {message: "Error deleting group: " + groupId + " not found"}
-    )
+    if (err) return res.status(500).send({
+      message: "Error deleting group: " + err.message
+    })
+    if (!group) return res.status(404).send({
+      message: "Error deleting group: " + groupId + " not found"
+    })
     group.remove(err => {
-        if (err) return res.status(500).send(
-          {message: "Error deleting group: " + groupId}
-        )
-        res.status(200).send(
-          {message: "Group has been deleted"}
-        )
+      if (err) return res.status(500).send({
+        message: "Error deleting group: " + groupId
+      })
+
+      group.members.map(memberId => {
+
+        User.findByIdAndUpdate(memberId,
+          {$pull: { groups: groupId}},
+           (err, memberUpdated) => {
+              if (err) return res.status(500).send({
+                message: 'Error at updating member: ' + err.message
+              })
+              if (!memberUpdated) return res.status(404).send({
+                message: 'Member not found'
+              })
+            })
+      })
+
+      res.status(200).send({
+        message: "Group has been deleted"
+      })
     })
   })
 }

@@ -7,6 +7,7 @@ module.exports = router
 // routes
 router.post('/register', register)
 router.get('/', getAllGroups)
+router.get('/user/:userId', getGroupsByUserId)
 router.get('/members/:groupId', getGroupMembers)
 router.get('/:groupId', getGroupById)
 router.put('/:groupId', update)
@@ -21,6 +22,10 @@ function register(req, res) {
 // GET
 function getAllGroups(req, res) {
     groupService.getAllGroups(req, res)
+}
+
+function getGroupsByUserId(req, res) {
+    groupService.getGroupsByUserId(req, res)
 }
 
 function getGroupById(req, res) {
