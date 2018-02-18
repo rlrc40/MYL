@@ -15,3 +15,5 @@ const db = mongoose.connect(config.db, (err, res) => {
 app.listen(config.port, () => {
     console.log('Server listening on port ' + config.port)
 })
+
+module.exports = app
