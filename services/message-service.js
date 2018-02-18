@@ -1,14 +1,4 @@
 const Message = require('../models/Message')
-const mongoose = require('mongoose')
-const urlDB = "mongodb://localhost/myl"
-
-const db = mongoose.connect(urlDB, (err, res) => {
-  if (err) {
-    return console.log("Error al conectar con la base de datos")
-  }
-  console.log('Conexión con la base de datos establecida')
-
-})
 
 var service = {}
 service.getMessageById = getMessageById

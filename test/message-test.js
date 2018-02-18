@@ -1,7 +1,6 @@
 //During the test the env variable is set to test
 process.env.NODE_ENV = 'test'
 
-let mongoose = require("mongoose")
 let Message = require('../models/Message')
 
 //Require the dev-dependencies
@@ -147,6 +146,7 @@ describe('Messages', () => {
     })
   })
 
+  // TODO
   describe('/DELETE/:id message', () => {
     it('it should DELETE a message given the id', (done) => {
       let message = getMessage('Test text.')
