@@ -10,6 +10,7 @@ router.get('/', getAll)
 router.get('/:userId', getById)
 router.get('/group/:groupId', getUsersByGroupId)
 router.get('/connections/:userId', getUserConnections)
+router.post('/search', getUsersBySearch)
 router.put('/:userId', update)
 router.delete('/:userId', _delete)
 
@@ -35,6 +36,10 @@ function getUsersByGroupId(req, res) {
 
 function getUserConnections(req, res) {
     userService.getUserConnections(req, res)
+}
+
+function getUsersBySearch(req, res) {
+    userService.getUsersBySearch(req, res)
 }
 
 // PUT

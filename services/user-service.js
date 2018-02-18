@@ -1,20 +1,12 @@
 const User = require('../models/User')
 const Group = require('../models/Group')
-const mongoose = require('mongoose')
-const urlDB = "mongodb://localhost/myl"
-
-const db = mongoose.connect(urlDB, (err, res) => {
-  if (err) {
-    return console.log("Error al conectar con la base de datos")
-  }
-  console.log('Conexión con la base de datos establecida')
-})
 
 var service = {}
 service.getAll = getAll
 service.getById = getById
 service.getUsersByGroupId = getUsersByGroupId
 service.getUserConnections = getUserConnections
+service.getUsersBySearch = getUsersBySearch
 service.create = validateUser
 service.update = update
 service._delete = _delete
@@ -79,6 +71,27 @@ function getUserConnections(req, res) {
     })
 }
 
+function getUsersBySearch(req, res) {
+  let searchBody = req.body
+  let nativeLanguage = searchBody.nativeLanguage
+  let languagesToLearn = searchBody.languagesToLearn
+  let gender = searchBody.gender
+  User.find({
+    $and:[
+        { nativeLanguage: nativeLanguage },
+        { languagesToLearn: { $in: [languagesToLearn] } },
+        { gender: gender }
+    ]
+  }, (err, users) => {
+    if (err) return res.status(500).send(err.name + ': ' + err.message)
+    if (!users) return res.status(404).send({
+      message: "Users not found"
+    })
+
+    res.status(200).send(users)
+  })
+}
+
 function create(req, res) {
   let userParam = req.body
   let user = new User()
@@ -92,7 +105,7 @@ function create(req, res) {
   user.occupation = userParam.occupation
   user.password = userParam.password
   user.nativeLanguage = userParam.nativeLanguage
-  user.languagesToLearn = [userParam.languagesToLearn]
+  user.languagesToLearn = userParam.languagesToLearn
   user.facebookAddress = userParam.facebookAddress
   user.facebookAvatar = userParam.facebookAvatar
   user.facebookLikedPages = userParam.facebookLikedPages
@@ -113,9 +126,9 @@ function create(req, res) {
   user.level = 0
   user.languageLevel = 0
   user.groups = []
-  connections = []
-  connectionRequests = []
-  myConnectionRequests = []
+  user.connections = []
+  user.connectionRequests = []
+  user. myConnectionRequests = []
 
   user.save((err, userStored) => {
     if (err) return res.status(500).send({
@@ -181,22 +194,18 @@ function _delete(req, res) {
       if (err) return res.status(500).send({
         message: "Error at deleting user: " + userId
       })
-      user.groups.map(function(groupId) {
-        Group.findById(
-          groupId, (err, group) => {
-            if (err) return res.send(500).send(err.name + ': ' + err.message)
-            if (!group) return res.status(404).send({message: "Group not found"})
 
-            let index = group.members.indexOf(user.id)
-            let membersUpdate = group.members
-            if (index > -1) {
-              membersUpdate.splice(index, 1)
-            }
-            Group.findByIdAndUpdate(groupId, {members: membersUpdate}, (err, groupUpdated) => {
-              if (err || !groupUpdated) res.send(500).send('Error updating the group: ' + err.message)
-
+      user.groups.map( function(groupId) {
+        Group.findByIdAndUpdate(groupId,
+          {$pull: { members: userId}},
+           (err, groupUpdate) => {
+              if (err) return res.status(500).send({
+                message: 'Error at updating group: ' + err.message
+              })
+              if (!groupUpdate) return res.status(404).send({
+                message: 'Group not found'
+              })
             })
-          })
       })
       res.status(200).send({
         message: "User has been deleted"

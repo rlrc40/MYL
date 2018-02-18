@@ -1,7 +1,6 @@
 //During the test the env variable is set to test
 process.env.NODE_ENV = 'test'
 
-let mongoose = require("mongoose")
 let User = require('../models/User')
 let Group = require('../models/Group')
 
@@ -16,11 +15,11 @@ const getUser = (email) => new User({
   email: email,
   description: "blablabla",
   age: 24,
-  gender: 'F',
+  gender: 'M',
   occupation: '',
   password: '',
   nativeLanguage: 'Spanish',
-  languagesToLearn: ['English'],
+  languagesToLearn: ['English', 'French'],
   facebookAddress: [],
   facebookAvatar: '',
   facebookLikedPages: [],
@@ -169,6 +168,46 @@ describe('Users', () => {
     })
   })
 
+  describe('/GET search users', () => {
+    it('it should GET all the users that match by given fields', (done) => {
+      let searchBody = {
+        nativeLanguage: 'Spanish',
+        languagesToLearn: ['English'],
+        gender: 'M'
+      }
+      let user = getUser('test@email.xom')
+      let user2 = getUser('test2@mail.xom')
+      let user3 = getUser('test3@mail.xom')
+      user.save((err, user) => {
+        user2.save((err, user) => {
+          user3.save((err, user) => {
+            chai.request(server)
+              .put('/users/' + user.id)
+              .send({
+                nativeLanguage: 'English',
+              })
+              .end((err, res) => {
+                chai.request(server)
+                  .post('/users/search')
+                  .send(searchBody)
+                  .end((err, res) => {
+                    res.should.have.status(200)
+                    res.body.should.be.a('array')
+                    res.body.length.should.be.eql(2)
+                    res.body.map( (user) => {
+                      user['nativeLanguage'].should.be.eql('Spanish')
+                      user['languagesToLearn'].should.contain('English')
+                      user['gender'].should.be.eql('M')
+                    })
+                    done()
+                  })
+              })
+          })
+        })
+      })
+    })
+  })
+
 
   /*
    * Test the /POST route
@@ -267,6 +306,7 @@ describe('Users', () => {
     })
   })
 
+// TODO
   describe('/DELETE/:id user', () => {
     it('it should DELETE a user given the id', (done) => {
       let user = getUser('test6@mail.xom')
