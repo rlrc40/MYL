@@ -1,23 +1,23 @@
+'use strict'
+
 const express = require('express')
-const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-
-
-const port = process.env.NODE_ENV === 'production' ? 80 : 3000
+const api = require('./routes')
+const hbs = require('express-handlebars')
 const app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+app.engine('.hbs', hbs({
+  defaultLayault: 'default',
+  ext: '.hbs'
+}))
 
-// controllers
-app.use('/users', require('./controllers/users-controller'))
-app.use('/comments', require('./controllers/comments-controller'))
-app.use('/groups', require('./controllers/groups-controller'))
-app.use('/messages', require('./controllers/messages-controller'))
+app.set('view engine', '.hbs')
 
-
-app.listen(port, () => {
-    console.log('Server listening on port ' + port)
+app.use('/', api)
+app.get('/login', (req, res) => {
+  res.render('login')
 })
 
 module.exports = app
