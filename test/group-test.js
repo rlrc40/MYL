@@ -7,15 +7,15 @@ let Group = require('../models/Group')
 //Require the dev-dependencies
 let chai = require('chai')
 let chaiHttp = require('chai-http')
-let server = require('../server')
+let server = require('../index')
 let should = chai.should()
 
 const getGroup = (name) => new Group({
-  creator: '5a74b291b3a882059c328880',
+  creator: '5a84354a95fb0d2f509a500b',
 	name: name,
-	description: 'Description of the group',
-	avatar: 'avatar.jpg',
-	languages: ['English'],
+	description: 'Description text',
+	avatar: 'avatar2.jpg',
+	languages: ['English', 'Spanish'],
 	members: []
 })
 
@@ -34,7 +34,7 @@ describe('Groups', () => {
             .get('/groups')
             .end((err, res) => {
                 res.should.have.status(200)
-                res.body.should.be.a('array')
+                res.body.should.be.a('object')
               done()
             })
       })
@@ -56,7 +56,6 @@ describe('Groups', () => {
                 res.body.group.should.have.property('description')
                 res.body.group.should.have.property('avatar')
                 res.body.group.should.have.property('languages')
-                res.body.group.should.have.property('comments')
                 res.body.group.should.have.property('members')
               done()
             })
@@ -73,8 +72,8 @@ describe('Groups', () => {
             .end((err, res) => {
                 res.should.have.status(412)
                 res.body.should.be.a('object')
-                res.body.message.should.to.be.eql('Group name ' + group.name + ' is already taken')
-              done()
+                res.body.should.have.property('message').eql('Group name is already taken')
+                done()
             })
           })
     })
@@ -98,23 +97,21 @@ describe('Groups', () => {
 
   describe('/GET/:id group', () => {
       it('it should GET a group by the given id', (done) => {
-        let group = getGroup('Berlin')
+        let group = getGroup('Students')
         group.save((err, group) => {
             chai.request(server)
             .get('/groups/' + group.id)
             .end((err, res) => {
                 res.should.have.status(200)
                 res.body.should.be.a('object')
-                res.body.should.have.property('creator')
-                res.body.should.have.property('name')
-                res.body.should.have.property('members')
-                res.body.should.have.property('_id').eql(group.id)
+                res.body.group.should.have.property('_id').eql(group.id)
               done()
             })
         })
 
       })
   })
+
 
   describe('/PUT/:id group', () => {
       it('it should UPDATE a group given the id', (done) => {
@@ -126,15 +123,29 @@ describe('Groups', () => {
                 .end((err, res) => {
                     res.should.have.status(200)
                     res.body.should.be.a('object')
-                    res.body.should.have.property('message').eql('Group ' + group.name + ' has been updated')
-                    res.body.group.should.have.property('description').eql('New description of the group')
+                    res.body.should.have.property('message').eql('Group has been updated')
                   done()
                 })
           })
       })
   })
 
-  //update no group
+  describe('/PUT/:id unexistent group', () => {
+      it('it should not UPDATE a group given a wrong id', (done) => {
+        let group = getGroup('Roma')
+        group.save((err, group) => {
+                chai.request(server)
+                .put('/groups/' + '5574b291b3a882059c328666')
+                .send({description: 'New description of the group'})
+                .end((err, res) => {
+                    res.should.have.status(404)
+                    res.body.should.be.a('object')
+                    res.body.should.have.property('message').eql('Group not found')
+                  done()
+                })
+          })
+      })
+  })
 
   describe('/DELETE/:id group', () => {
       it('it should DELETE a group given the id', (done) => {

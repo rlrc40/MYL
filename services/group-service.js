@@ -1,21 +1,12 @@
 const User = require('../models/User')
 const Group = require('../models/Group')
-const mongoose = require('mongoose')
-const urlDB = "mongodb://localhost/myl"
-
-const db = mongoose.connect(urlDB,  (err, res) => {
-    if (err) {
-        return console.log("Error al conectar con la base de datos")
-    }
-    console.log('Conexión con la base de datos establecida')
-
-})
 
 var service = {}
 service.getAllGroups = getAllGroups
 service.getGroupById = getGroupById
 service.getGroupsByUserId = getGroupsByUserId
-service.getGroupMembers = getGroupMembers
+service.getGroupsByLang = getGroupsByLang
+service.getGroupsBySearch = getGroupsBySearch
 service.create = validateGroupName
 service.update = update
 service._delete = _delete
@@ -70,16 +61,40 @@ function getGroupById(req, res) {
     })
 }
 
-function getGroupMembers(req, res) {
-    let groupId = req.params.groupId
-    Group.findById(
-        groupId, 'members', (err, members) => {
+function getGroupsByLang(req, res) {
+    let languages = new RegExp(req.params.languages, 'i')
+    Group.find(
+      { languages: {$regex: languages}},
+      (err, groups) => {
             if (err) return res.status(500).send(
               err.name + ': ' + err.message
             )
-            res.status(200).send(
-              members
+            if (!groups) return res.status(404).send({
+              message: "Groups not found"
+            })
+            res.status(200).send({
+              groups
+            })
+    })
+}
+
+function getGroupsBySearch(req, res) {
+    let search = new RegExp(req.params.search, 'i')
+    Group.find({
+      $or: [
+        {name: {$regex: search}},
+        {description: {$regex: search}}
+      ]
+    }, (err, groups) => {
+            if (err) return res.status(500).send(
+              err.name + ': ' + err.message
             )
+            if (!groups) return res.status(404).send({
+              message: "Groups not found"
+            })
+            res.status(200).send({
+              groups
+            })
     })
 }
 
@@ -97,22 +112,24 @@ function create(req, res) {
 
 
     group.save((err, groupStored) => {
+
         if (err) return res.status(500).send({
           message: 'Error when saving the group in the database'
         })
 
-        let creatorId = groupStored.creator
+        groupStored.members.map(memberId => {
 
-        User.findByIdAndUpdate(creatorId,
-          { $push: { groups: groupStored.id} },
-           (err, memberUpdated) => {
-              if (err) return res.status(500).send({
-                message: 'Error updating member: ' + err.message
-              })
-              if (!memberUpdated) return res.status(404).send({
-                message: 'Member not found'
-              })
+          User.findByIdAndUpdate(memberId,
+            { $push: { groups: groupStored.id} },
+             (err, memberUpdated) => {
+                if (err) return res.status(500).send({
+                  message: 'Error updating member: ' + err.message
+                })
+                if (!memberUpdated) return res.status(404).send({
+                  message: 'Member not found'
+                })
             })
+        })
 
         res.status(200).send({
           message: 'Group ' + groupParam.name + ' has been created',
@@ -129,11 +146,10 @@ function validateGroupName(req, res) {
             if (group) return res.status(412).send({
               message: 'Group name is already taken'
             })
-            if (err) return res.status(666).send(
+            if (err) return res.status(500).send(
               err.name + ': ' + err.message
             )
-            else create(req, res)
-
+            create(req, res)
         }
     )
 }
@@ -173,7 +189,7 @@ function _delete(req, res) {
       group.members.map(memberId => {
 
         User.findByIdAndUpdate(memberId,
-          {$pull: { groups: groupId}},
+          { $pull: { groups: groupId}},
            (err, memberUpdated) => {
               if (err) return res.status(500).send({
                 message: 'Error at updating member: ' + err.message
@@ -181,7 +197,7 @@ function _delete(req, res) {
               if (!memberUpdated) return res.status(404).send({
                 message: 'Member not found'
               })
-            })
+          })
       })
 
       res.status(200).send({

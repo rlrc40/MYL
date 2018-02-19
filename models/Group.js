@@ -15,7 +15,7 @@ const GroupSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    match: [/.*\.(jpg|jpeg|png)$/gim, 'Only valid .jpeg or .png files.']
+    match: [/^.*\.(jpg|jpeg|png|gif)$/i, 'Only valid .jpeg or .png files.']
   },
   languages: [{
     type: String,
