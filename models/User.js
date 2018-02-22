@@ -24,7 +24,7 @@ const UserSchema = new mongoose.Schema({
 	facebookLikedPages: [Object],
 	facebookGroups: [Object],
 	facebookMusic: [Object],
-	facebookFilm: [Object],
+	facebookMovies: [Object],
 	facebookBooks: [Object],
 	facebookSeries: [Object],
 	facebookSports: [Object],

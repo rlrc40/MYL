@@ -126,7 +126,7 @@ function create(req, res) {
   user.facebookLikedPages = userParam.facebookLikedPages
   user.facebookGroups = userParam.facebookGroups
   user.facebookMusic = userParam.facebookMusic
-  user.facebookFilm = userParam.facebookFilm
+  user.facebookMovies = userParam.facebookMovies
   user.facebookBooks = userParam.facebookBooks
   user.facebookSeries = userParam.facebookSeries
   user.facebookSports = userParam.facebookSports
