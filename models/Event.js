@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const LANGUAGES = ["Spanish", "English", "Italian", "French", "Portuguese", "Deutsch", "Polish"]
+const TAGS = ["Meeting", "Party", "Speech", "Travel", "Culture"]
 const ObjectId = mongoose.Schema.Types.ObjectId
 
 
@@ -9,19 +10,24 @@ const MeetingSchema = new mongoose.Schema({
     type: ObjectId,
     required: 'creator is required'
   },
-  avatar: String,
+  avatar: {
+    type: String,
+    match: [/^.*\.(jpg|jpeg|png|gif)$/i, 'Only valid .jpeg or .png files.']
+  },
   title: {
     type: String,
-    required: 'creator is required',
+    required: 'title is required',
     max: 100
   },
   locate: {
-    type: String,
+    type: Object,
     max: 100
   },
   date: Date,
   description: {
     type: String,
+    required: 'description is required',
+    min: 20,
     max: 160
   },
   languages: [{
@@ -31,7 +37,15 @@ const MeetingSchema = new mongoose.Schema({
   followers: {
     type: number,
     min: 0
+  },
+  tags: {
+    type: string,
+    enum: TAGS
+  },
+  date_expired: {
+    type: date,
+    required: 'Date expired is required'
   }
 })
 
-module.exports = mongoose.model('Meeting', MeetingSchema)
+module.exports = mongoose.model('Events', MeetingSchema)
