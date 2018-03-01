@@ -26,26 +26,26 @@ const MeetingSchema = new mongoose.Schema({
   date: Date,
   description: {
     type: String,
-    required: 'description is required',
     min: 20,
-    max: 160
+    max: 260,
+    required: 'description is too short'
   },
   languages: [{
     type: String,
     enum: LANGUAGES
   }],
   followers: {
-    type: number,
-    min: 0
+    type: [ObjectId]
   },
-  tags: {
-    type: string,
+  tags: [{
+    type: String,
     enum: TAGS
-  },
-  date_expired: {
-    type: date,
+  }],
+  dateExpired: {
+    type: Date,
     required: 'Date expired is required'
-  }
+  },
+  created_at: { type: Date, default: Date.now }
 })
 
 module.exports = mongoose.model('Events', MeetingSchema)
