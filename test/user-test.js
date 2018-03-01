@@ -7,7 +7,7 @@ let Group = require('../models/Group')
 //Require the dev-dependencies
 let chai = require('chai')
 let chaiHttp = require('chai-http')
-let server = require('../server')
+let server = require('../index')
 let should = chai.should()
 
 const getUser = (email) => new User({
@@ -94,7 +94,7 @@ describe('Users', () => {
     })
   })
 
-  describe('/GET/:id (not exist) user', () => {
+  describe('/GET/:id user NOT FOUND', () => {
     it('it should NOT GET an user', (done) => {
       let user = getUser('test4@email.xom')
       user.save((err, user) => {
@@ -168,7 +168,7 @@ describe('Users', () => {
     })
   })
 
-  describe('/GET search users', () => {
+  describe('/POST find users', () => {
     it('it should GET all the users that match by given fields', (done) => {
       let searchBody = {
         nativeLanguage: 'Spanish',
@@ -188,13 +188,13 @@ describe('Users', () => {
               })
               .end((err, res) => {
                 chai.request(server)
-                  .post('/users/search')
+                  .post('/users/find')
                   .send(searchBody)
                   .end((err, res) => {
                     res.should.have.status(200)
                     res.body.should.be.a('array')
                     res.body.length.should.be.eql(2)
-                    res.body.map( (user) => {
+                    res.body.map((user) => {
                       user['nativeLanguage'].should.be.eql('Spanish')
                       user['languagesToLearn'].should.contain('English')
                       user['gender'].should.be.eql('M')
@@ -205,6 +205,49 @@ describe('Users', () => {
           })
         })
       })
+    })
+  })
+
+  describe('/POST find users by name', () => {
+    it('it should GET an user by the given name', (done) => {
+      let searchName = {
+        name: 'est'
+      }
+      let user = getUser('test@email.xom')
+      user.save((err, user) => {
+        chai.request(server)
+          .post('/users/find/name')
+          .send(searchName)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('array')
+            res.body.length.should.be.eql(1)
+            res.body[0].should.have.property('name').eql('Test')
+            res.body[0].should.have.property('email')
+            res.body[0].should.have.property('description')
+            res.body[0].should.have.property('age')
+            res.body[0].should.have.property('_id').eql(user.id)
+            done()
+          })
+      })
+    })
+  })
+
+  describe('/POST find users by name NOT FOUND', () => {
+    it('it should NOT GET an user by the given name', (done) => {
+      let searchName = {
+        name: 'TestNotExist'
+      }
+      let user = getUser('test@email.xom')
+      chai.request(server)
+        .post('/users/find/name')
+        .send(searchName)
+        .end((err, res) => {
+          res.should.have.status(404)
+          res.body.should.be.a('object')
+          res.body.should.have.property('message').eql('Users not found')
+          done()
+        })
     })
   })
 
@@ -270,7 +313,7 @@ describe('Users', () => {
       })
     })
   })
-  describe('/PUT/:id (not exist) user', () => {
+  describe('/PUT/:id user NOT FOUND', () => {
     it('it should NOT UPDATE the user', (done) => {
       let user = getUser('test5@email.xom')
       chai.request(server)
@@ -292,7 +335,7 @@ describe('Users', () => {
    */
   // TODO
 
-  describe('/DELETE/:id (not exist) user', () => {
+  describe('/DELETE/:id user NOT FOUND', () => {
     it('it should NOT DELETE a user given the id', (done) => {
       let user = getUser('test6@mail.xom')
       chai.request(server)
@@ -306,7 +349,7 @@ describe('Users', () => {
     })
   })
 
-// TODO
+  // TODO
   describe('/DELETE/:id user', () => {
     it('it should DELETE a user given the id', (done) => {
       let user = getUser('test6@mail.xom')

@@ -10,7 +10,8 @@ router.get('/', getAll)
 router.get('/:userId', getById)
 router.get('/group/:groupId', getUsersByGroupId)
 router.get('/connections/:userId', getUserConnections)
-router.post('/search', getUsersBySearch)
+router.post('/find', findUsersBySearch)
+router.post('/find/name', findUserByName)
 router.put('/:userId', update)
 router.delete('/:userId', _delete)
 
@@ -20,6 +21,15 @@ router.delete('/:userId', _delete)
 function register(req, res) {
     userService.create(req, res)
 }
+
+function findUsersBySearch(req, res) {
+    userService.findUsersBySearch(req, res)
+}
+
+function findUserByName(req, res) {
+    userService.findUserByName(req, res)
+}
+
 
 // GET
 function getAll(req, res) {
@@ -36,10 +46,6 @@ function getUsersByGroupId(req, res) {
 
 function getUserConnections(req, res) {
     userService.getUserConnections(req, res)
-}
-
-function getUsersBySearch(req, res) {
-    userService.getUsersBySearch(req, res)
 }
 
 // PUT

@@ -6,7 +6,8 @@ service.getAll = getAll
 service.getById = getById
 service.getUsersByGroupId = getUsersByGroupId
 service.getUserConnections = getUserConnections
-service.getUsersBySearch = getUsersBySearch
+service.findUsersBySearch = findUsersBySearch
+service.findUserByName = findUserByName
 service.create = validateUser
 service.update = update
 service._delete = _delete
@@ -71,7 +72,7 @@ function getUserConnections(req, res) {
     })
 }
 
-function getUsersBySearch(req, res) {
+function findUsersBySearch(req, res) {
   let searchBody = req.body
   let nativeLanguage = searchBody.nativeLanguage
   let languagesToLearn = searchBody.languagesToLearn
@@ -85,6 +86,20 @@ function getUsersBySearch(req, res) {
   }, (err, users) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!users) return res.status(404).send({
+      message: "Users not found"
+    })
+
+    res.status(200).send(users)
+  })
+}
+
+function findUserByName(req, res) {
+  let searchName = req.body.name
+  User.find(
+        { name: {$regex : ".*"+searchName+".*"} }
+  , (err, users) => {
+    if (err) return res.status(500).send(err.name + ': ' + err.message)
+    if (users.length == 0) return res.status(404).send({
       message: "Users not found"
     })
 
@@ -111,7 +126,7 @@ function create(req, res) {
   user.facebookLikedPages = userParam.facebookLikedPages
   user.facebookGroups = userParam.facebookGroups
   user.facebookMusic = userParam.facebookMusic
-  user.facebookFilm = userParam.facebookFilm
+  user.facebookMovies = userParam.facebookMovies
   user.facebookBooks = userParam.facebookBooks
   user.facebookSeries = userParam.facebookSeries
   user.facebookSports = userParam.facebookSports
