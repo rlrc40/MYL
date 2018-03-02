@@ -6,12 +6,15 @@ module.exports = router
 
 // routes
 router.post('/register', register)
+router.post('/find', findUsersBySearch)
+router.post('/find/name', findUserByName)
+router.post('/filter', findUsersByFilter)
 router.get('/', getAll)
 router.get('/:userId', getById)
 router.get('/group/:groupId', getUsersByGroupId)
 router.get('/connections/:userId', getUserConnections)
-router.post('/find', findUsersBySearch)
-router.post('/find/name', findUserByName)
+router.put('/add-connection/:userId', addConnection)
+router.put('/remove-connection/:userId', removeConnection)
 router.put('/:userId', update)
 router.delete('/:userId', _delete)
 
@@ -28,6 +31,10 @@ function findUsersBySearch(req, res) {
 
 function findUserByName(req, res) {
     userService.findUserByName(req, res)
+}
+
+function findUsersByFilter(req, res) {
+    userService.findUsersByFilter(req, res)
 }
 
 
@@ -51,6 +58,14 @@ function getUserConnections(req, res) {
 // PUT
 function update(req, res) {
     userService.update(req, res)
+}
+
+function addConnection(req, res) {
+    userService.addConnection(req, res)
+}
+
+function removeConnection(req, res) {
+    userService.removeConnection(req, res)
 }
 
 // DELETE

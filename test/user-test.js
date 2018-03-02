@@ -23,13 +23,13 @@ const getUser = (email) => new User({
   facebookAddress: [],
   facebookAvatar: '',
   facebookLikedPages: [],
-  facebookGroups: [],
-  facebookMusic: [],
-  facebookFilms: [],
-  facebookBooks: [],
-  facebookSeries: [],
-  facebookSports: [],
-  facebookFriends: [],
+  facebookGroups: ['Group1', 'Group2'],
+  facebookMusic: ['smrtdeath', 'Shakira'],
+  facebookMovies: ['RockAndRolla', 'The Beatles'],
+  facebookBooks: ['Historias Nórdicas', 'Book'],
+  facebookSeries: ['Big Bang Theory', 'Vikings'],
+  facebookSports: ['Futbol', 'Skate'],
+  facebookFriends: ['Pedro', 'Juan'],
   instagramAccount: 'instagramAccount',
   twitterAccount: 'twitterAccount',
   skype: 'testSkype'
@@ -54,6 +54,168 @@ describe('Users', () => {
       })
     })
   })
+
+  /*
+   * Test the /POST route
+   */
+  describe('/POST user', () => {
+    it('it should CREATE a new user', (done) => {
+      let user = getUser('test2@email.xom')
+      chai.request(server)
+        .post('/users/register')
+        .send(user)
+        .end((err, res) => {
+          res.should.have.status(200)
+          res.body.should.be.a('object')
+          res.body.message.should.to.be.eql('User Test has been created')
+          res.body.user.should.be.a('object')
+          res.body.user.should.have.property('name')
+          res.body.user.should.have.property('email')
+          res.body.user.should.have.property('description')
+          res.body.user.should.have.property('age')
+          done()
+        })
+    })
+  })
+
+  describe('/POST user with existing email', () => {
+    it('it should FAIL at CREATE the new user', (done) => {
+      var user = getUser('test2@email.xom')
+      user.save((err, user) => {
+        chai.request(server)
+          .post('/users/register')
+          .send(user)
+          .end((err, res) => {
+            res.should.have.status(412)
+            res.body.should.be.a('object')
+            res.body.should.have.property('message').eql('Email test2@email.xom is already taken')
+            done()
+          })
+      })
+    })
+  })
+
+  describe('/POST find users', () => {
+    it('it should GET all the users that match by given fields', (done) => {
+      let searchBody = {
+        nativeLanguage: 'Spanish',
+        languagesToLearn: ['English'],
+        gender: 'M'
+      }
+      let user = getUser('test@email.xom')
+      let user2 = getUser('test2@mail.xom')
+      let user3 = getUser('test3@mail.xom')
+      user.save((err, user) => {
+        user2.save((err, user) => {
+          user3.save((err, user) => {
+            chai.request(server)
+              .put('/users/' + user.id)
+              .send({
+                nativeLanguage: 'English',
+              })
+              .end((err, res) => {
+                chai.request(server)
+                  .post('/users/find')
+                  .send(searchBody)
+                  .end((err, res) => {
+                    res.should.have.status(200)
+                    res.body.should.be.a('array')
+                    res.body.length.should.be.eql(2)
+                    res.body.map((user) => {
+                      user['nativeLanguage'].should.be.eql('Spanish')
+                      user['languagesToLearn'].should.contain('English')
+                      user['gender'].should.be.eql('M')
+                    })
+                    done()
+                  })
+              })
+          })
+        })
+      })
+    })
+  })
+
+  describe('/POST find users by name', () => {
+    it('it should GET an user by the given name', (done) => {
+      let searchName = {
+        name: 'Test'
+      }
+      let user = getUser('test@email.com')
+      user.save((err, user) => {
+        chai.request(server)
+          .post('/users/find/name')
+          .send(searchName)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('array')
+            res.body.length.should.be.eql(1)
+            res.body[0].should.have.property('name').eql('Test')
+            res.body[0].should.have.property('email')
+            res.body[0].should.have.property('description')
+            res.body[0].should.have.property('age')
+            res.body[0].should.have.property('_id').eql(user.id)
+            done()
+          })
+      })
+    })
+  })
+
+  describe('/POST find users by filter', () => {
+    it('it should GET an user by the given some fields', (done) => {
+      let filter = {
+        facebookGroups: 'Group1',
+        facebookMusic: 'smrtdeath',
+        facebookMovies: 'The Beatles',
+        facebookBooks: 'Historias Nórdicas',
+        facebookSeries: 'Big Bang Theory',
+        facebookSports: 'Futbol',
+        facebookFriends: 'Juan'
+      }
+      let user = getUser('test@email.xom')
+      user.save((err, user) => {
+        chai.request(server)
+          .post('/users/filter')
+          .send(filter)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('array')
+            res.body.length.should.be.eql(1)
+            res.body[0].should.have.property('name').eql('Test')
+            res.body[0].should.have.property('email')
+            res.body[0].should.have.property('description')
+            res.body[0].should.have.property('age')
+            res.body[0].should.have.property('facebookGroups')
+            res.body[0].should.have.property('facebookMusic')
+            res.body[0].should.have.property('facebookMovies')
+            res.body[0].should.have.property('facebookBooks')
+            res.body[0].should.have.property('facebookSeries')
+            res.body[0].should.have.property('facebookSports')
+            res.body[0].should.have.property('facebookFriends')
+            res.body[0].should.have.property('_id').eql(user.id)
+            done()
+          })
+      })
+    })
+  })
+
+  describe('/POST find users by name NOT FOUND', () => {
+    it('it should NOT GET an user by the given name', (done) => {
+      let searchName = {
+        name: 'TestNotExist'
+      }
+      let user = getUser('test@email.xom')
+      chai.request(server)
+        .post('/users/find/name')
+        .send(searchName)
+        .end((err, res) => {
+          res.should.have.status(404)
+          res.body.should.be.a('object')
+          res.body.should.have.property('message').eql('Users not found')
+          done()
+        })
+    })
+  })
+
   /*
    * Test the /GET route
    */
@@ -168,129 +330,6 @@ describe('Users', () => {
     })
   })
 
-  describe('/POST find users', () => {
-    it('it should GET all the users that match by given fields', (done) => {
-      let searchBody = {
-        nativeLanguage: 'Spanish',
-        languagesToLearn: ['English'],
-        gender: 'M'
-      }
-      let user = getUser('test@email.xom')
-      let user2 = getUser('test2@mail.xom')
-      let user3 = getUser('test3@mail.xom')
-      user.save((err, user) => {
-        user2.save((err, user) => {
-          user3.save((err, user) => {
-            chai.request(server)
-              .put('/users/' + user.id)
-              .send({
-                nativeLanguage: 'English',
-              })
-              .end((err, res) => {
-                chai.request(server)
-                  .post('/users/find')
-                  .send(searchBody)
-                  .end((err, res) => {
-                    res.should.have.status(200)
-                    res.body.should.be.a('array')
-                    res.body.length.should.be.eql(2)
-                    res.body.map((user) => {
-                      user['nativeLanguage'].should.be.eql('Spanish')
-                      user['languagesToLearn'].should.contain('English')
-                      user['gender'].should.be.eql('M')
-                    })
-                    done()
-                  })
-              })
-          })
-        })
-      })
-    })
-  })
-
-  describe('/POST find users by name', () => {
-    it('it should GET an user by the given name', (done) => {
-      let searchName = {
-        name: 'est'
-      }
-      let user = getUser('test@email.xom')
-      user.save((err, user) => {
-        chai.request(server)
-          .post('/users/find/name')
-          .send(searchName)
-          .end((err, res) => {
-            res.should.have.status(200)
-            res.body.should.be.a('array')
-            res.body.length.should.be.eql(1)
-            res.body[0].should.have.property('name').eql('Test')
-            res.body[0].should.have.property('email')
-            res.body[0].should.have.property('description')
-            res.body[0].should.have.property('age')
-            res.body[0].should.have.property('_id').eql(user.id)
-            done()
-          })
-      })
-    })
-  })
-
-  describe('/POST find users by name NOT FOUND', () => {
-    it('it should NOT GET an user by the given name', (done) => {
-      let searchName = {
-        name: 'TestNotExist'
-      }
-      let user = getUser('test@email.xom')
-      chai.request(server)
-        .post('/users/find/name')
-        .send(searchName)
-        .end((err, res) => {
-          res.should.have.status(404)
-          res.body.should.be.a('object')
-          res.body.should.have.property('message').eql('Users not found')
-          done()
-        })
-    })
-  })
-
-
-  /*
-   * Test the /POST route
-   */
-  describe('/POST user', () => {
-    it('it should CREATE a new user', (done) => {
-      let user = getUser('test2@email.xom')
-      chai.request(server)
-        .post('/users/register')
-        .send(user)
-        .end((err, res) => {
-          res.should.have.status(200)
-          res.body.should.be.a('object')
-          res.body.message.should.to.be.eql('User Test has been created')
-          res.body.user.should.be.a('object')
-          res.body.user.should.have.property('name')
-          res.body.user.should.have.property('email')
-          res.body.user.should.have.property('description')
-          res.body.user.should.have.property('age')
-          done()
-        })
-    })
-  })
-  describe('/POST user with existing email', () => {
-    it('it should FAIL at CREATE the new user', (done) => {
-      let user = getUser('test3@email.xom')
-      user.save((err, user) => {
-        chai.request(server)
-          .post('/users/register')
-          .send(user)
-          .end((err, res) => {
-            res.should.have.status(412)
-            res.body.should.be.a('object')
-            res.body.message.should.to.be.eql('Email ' + user.email + ' is already taken')
-            done()
-          })
-      })
-    })
-  })
-
   /*
    * Test the /PUT/:id route
    */
@@ -313,6 +352,7 @@ describe('Users', () => {
       })
     })
   })
+
   describe('/PUT/:id user NOT FOUND', () => {
     it('it should NOT UPDATE the user', (done) => {
       let user = getUser('test5@email.xom')
@@ -330,24 +370,53 @@ describe('Users', () => {
     })
   })
 
-  /*
-   * Test the /DELETE/:id route
-   */
-  // TODO
-
-  describe('/DELETE/:id user NOT FOUND', () => {
-    it('it should NOT DELETE a user given the id', (done) => {
-      let user = getUser('test6@mail.xom')
-      chai.request(server)
-        .delete('/users/5a6d935d4b60a06aacada294')
-        .end((err, res) => {
-          res.should.have.status(404)
-          res.body.should.be.a('object')
-          res.body.should.have.property('message').eql('Error at deleting user: 5a6d935d4b60a06aacada294 not found')
-          done()
-        })
+  describe('/PUT/add-connection/ :id user', () => {
+    it('it should ADD new connection by the given user id', (done) => {
+      let user = getUser('user@email.xom')
+      user.save((err, user) => {
+        chai.request(server)
+          .put('/users/add-connection/' + user.id)
+          .send({
+            connectionId: '5a6d935d4b60a06aacada294'
+          })
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('object')
+            res.body.should.have.property('message').eql('The User has been added')
+            res.body.result.should.have.property('nModified').eql(1)
+            done()
+          })
+      })
     })
   })
+
+  describe('/PUT/remove-connection/ :id user', () => {
+    it('it should REMOVE a connection by the given user id', (done) => {
+      let user = getUser('user@email.xom')
+      user.save((err, user) => {
+        chai.request(server)
+          .put('/users/' + user.id)
+          .send({
+            connections: ['5a6d935d4b60a06aacada294', '5a6d935d4b60a06aacada293']
+          })
+          .end((err, res) => {
+            chai.request(server)
+              .put('/users/remove-connection/' + user.id)
+              .send({
+                connectionId: '5a6d935d4b60a06aacada294'
+              })
+              .end((err, res) => {
+                res.should.have.status(200)
+                res.body.should.be.a('object')
+                res.body.should.have.property('message').eql('The User has been removed')
+                res.body.result.should.have.property('nModified').eql(1)
+                done()
+              })
+          })
+      })
+    })
+  })
+
 
   // TODO
   describe('/DELETE/:id user', () => {
@@ -367,6 +436,24 @@ describe('Users', () => {
             })
         })
       })
+    })
+  })
+
+  /*
+   * Test the /DELETE/:id route
+   */
+  // TODO
+  describe('/DELETE/:id user NOT FOUND', () => {
+    it('it should NOT DELETE a user given the id', (done) => {
+      let user = getUser('test6@mail.xom')
+      chai.request(server)
+        .delete('/users/5a6d935d4b60a06aacada294')
+        .end((err, res) => {
+          res.should.have.status(404)
+          res.body.should.be.a('object')
+          res.body.should.have.property('message').eql('Error at deleting user: 5a6d935d4b60a06aacada294 not found')
+          done()
+        })
     })
   })
 
