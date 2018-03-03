@@ -108,9 +108,7 @@ describe('Events', () => {
       let filter = {
         languages: 'Spanish',
         tags: 'Meeting',
-        locate: {
-          coord: "123"
-        }
+        date: new Date("October 13, 2014 11:13:00")
       }
       let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
       event.save((err, user) => {
@@ -124,7 +122,7 @@ describe('Events', () => {
             res.body[0].should.have.property('title').eql('Title event')
             res.body[0].should.have.property('languages')
             res.body[0].should.have.property('tags')
-            res.body[0].should.have.property('locate')
+            res.body[0].should.have.property('date')
             res.body[0].should.have.property('_id').eql(event.id)
             done()
           })
