@@ -417,8 +417,6 @@ describe('Users', () => {
     })
   })
 
-
-  // TODO
   describe('/DELETE/:id user', () => {
     it('it should DELETE a user given the id', (done) => {
       let user = getUser('test6@mail.xom')
@@ -442,7 +440,6 @@ describe('Users', () => {
   /*
    * Test the /DELETE/:id route
    */
-  // TODO
   describe('/DELETE/:id user NOT FOUND', () => {
     it('it should NOT DELETE a user given the id', (done) => {
       let user = getUser('test6@mail.xom')
