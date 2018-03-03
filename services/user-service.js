@@ -96,12 +96,11 @@ function findUsersBySearch(req, res) {
 }
 
 function findUserByName(req, res) {
-  let searchName = req.body.name
-
+  let nameSearch = new RegExp(req.body.name, 'i')
   User.find({
-    name: {
-      $regex: ".*" + searchName + ".*"
-    }
+      name: {
+          $regex: nameSearch
+        }
   }, (err, users) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (users.length == 0) return res.status(404).send({
