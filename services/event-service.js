@@ -86,12 +86,26 @@ function findEventsBySearch(req, res) {
 }
 
 function findEventsByFilter(req, res) {
-  let filter = req.params.filter
-  Event.find(filter, (err, events) => {
+  let languages = req.body.languages
+  let tags = req.body.tags
+  let date = req.body.date
+
+  Event.find({
+    $and: [{
+      languages: {
+        $in: [languages]
+      },
+      tags: {
+        $in: [tags]
+      },
+      date: date
+    }]
+  }, (err, events) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!events) return res.status(404).send({
-      event: "Not found events"
+      message: "Events not found"
     })
+
     res.status(200).send(events)
   })
 }
