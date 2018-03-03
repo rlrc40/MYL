@@ -2,7 +2,7 @@ const Event = require('../models/Event')
 
 var service = {}
 service.create = create
-service.findEventsByEventName = findEventsByEventName
+service.findEventsByEventNameTitle = findEventsByEventNameTitle
 service.findEventsBySearch = findEventsBySearch
 service.findEventsByFilter = findEventsByFilter
 service.getAll = getAll
@@ -42,10 +42,12 @@ function create(req, res) {
   })
 }
 
-function findEventsByEventName(req, res) {
-  let eventName = req.params.eventName
+function findEventsByEventNameTitle(req, res) {
+  let searchNameTitle = new RegExp(req.body.title, 'i')
   Event.find({
-    name: eventName
+    title: {
+      $regex: searchNameTitle
+    }
   }, (err, events) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!events) return res.status(404).send({
@@ -56,11 +58,24 @@ function findEventsByEventName(req, res) {
 }
 
 function findEventsBySearch(req, res) {
-  let keyword = req.params.keyword
+  let keyword = new RegExp(req.body.keyword, 'i')
   Event.find({
-    $text: {
-      $search: keyword
-    }
+    $or: [{
+        title: {
+          $regex: keyword
+        }
+      },
+      {
+        description: {
+          $regex: keyword
+        }
+      },
+      {
+        tags: {
+          $regex: keyword
+        }
+      }
+    ]
   }, (err, events) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!events) return res.status(404).send({
@@ -138,48 +153,48 @@ function update(req, res) {
 
 function addFollower(req, res) {
   let eventId = req.params.eventId
-  let newFollower = req.body
+  let newFollower = req.body.followerId
 
   Event.update({
     "_id": eventId
   }, {
-    $push: {
+    $addToSet: {
       "followers": newFollower
     }
-  }, (err, eventUpdated) => {
+  }, (err, result) => {
     if (err) return res.status(500).send({
       message: 'Error at add user: ' + err.message
     })
-    if (!eventUpdated) return res.status(404).send({
-      message: 'Event not found'
+    if (result.nModified == 0) return res.status(404).send({
+      message: 'This follower already exists'
     })
     res.status(200).send({
       message: 'The User has been added',
-      event: eventUpdated
+      result: result
     })
   })
 }
 
 function removeFollower(req, res) {
   let eventId = req.params.eventId
-  let deleteFollower = req.body
+  let deleteFollower = req.body.followerId
 
   Event.update({
     "_id": eventId
   }, {
-    $pop: {
-      "followers": deleteFollower
+    $pull: {
+      'followers': deleteFollower
     }
-  }, (err, eventUpdated) => {
+  }, (err, result) => {
     if (err) return res.status(500).send({
       message: 'Error at remove user: ' + err.message
     })
-    if (!eventUpdated) return res.status(404).send({
+    if (result.nModified == 0) return res.status(404).send({
       message: 'Event not found'
     })
     res.status(200).send({
       message: 'The User has been removed',
-      event: eventUpdated
+      result: result
     })
   })
 }

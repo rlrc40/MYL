@@ -6,7 +6,7 @@ module.exports = router
 
 // routes
 router.post('/create', create)
-router.post('/find/name/', findEventsByEventName)
+router.post('/find/title/', findEventsByEventNameTitle)
 router.post('/find/', findEventsBySearch)
 router.post('/filter/', findEventsByFilter)
 router.get('/', getAll)
@@ -22,8 +22,8 @@ function create(req, res) {
   eventService.create(req, res)
 }
 
-function findEventsByEventName(req, res) {
-  eventService.findEventsByEventName(req, res)
+function findEventsByEventNameTitle(req, res) {
+  eventService.findEventsByEventNameTitle(req, res)
 }
 
 function findEventsBySearch(req, res) {

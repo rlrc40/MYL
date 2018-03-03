@@ -5,7 +5,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 
 
 
-const MeetingSchema = new mongoose.Schema({
+const EventSchema = new mongoose.Schema({
   creator: {
     type: ObjectId,
     required: 'creator is required'
@@ -45,7 +45,10 @@ const MeetingSchema = new mongoose.Schema({
     type: Date,
     required: 'Date expired is required'
   },
-  created_at: { type: Date, default: Date.now }
+  created_at: {
+    type: Date,
+    default: Date.now
+  }
 })
 
-module.exports = mongoose.model('Events', MeetingSchema)
+module.exports = mongoose.model('Events', EventSchema)

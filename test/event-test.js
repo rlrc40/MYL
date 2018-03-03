@@ -72,6 +72,93 @@ describe('Events', () => {
     })
   })
 
+  describe('/POST find events by name', () => {
+    it('it should GET the events by the given name', (done) => {
+      let searchNameTitle = {
+        title: 'le ev'
+      }
+      let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
+      event.save((err, user) => {
+        chai.request(server)
+          .post('/events/find/title')
+          .send(searchNameTitle)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('array')
+            res.body.length.should.be.eql(1)
+            res.body[0].should.have.property('creator')
+            res.body[0].should.have.property('avatar')
+            res.body[0].should.have.property('title').eql('Title event')
+            res.body[0].should.have.property('description')
+            res.body[0].should.have.property('locate')
+            res.body[0].should.have.property('date')
+            res.body[0].should.have.property('languages')
+            res.body[0].should.have.property('followers')
+            res.body[0].should.have.property('tags')
+            res.body[0].should.have.property('dateExpired')
+            res.body[0].should.have.property('_id').eql(event.id)
+            done()
+          })
+      })
+    })
+  })
+
+  describe('/POST find events by filter', () => {
+    it('it should GET events by the given some fields', (done) => {
+      let filter = {
+        languages: 'Spanish',
+        tags: 'Meeting',
+        locate: {
+          coord: "123"
+        }
+      }
+      let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
+      event.save((err, user) => {
+        chai.request(server)
+          .post('/events/filter')
+          .send(filter)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('array')
+            res.body.length.should.be.eql(1)
+            res.body[0].should.have.property('title').eql('Title event')
+            res.body[0].should.have.property('languages')
+            res.body[0].should.have.property('tags')
+            res.body[0].should.have.property('locate')
+            res.body[0].should.have.property('_id').eql(event.id)
+            done()
+          })
+      })
+    })
+  })
+
+
+
+  describe('/POST find events by general search', () => {
+    it('it should GET events by the givenkeyword', (done) => {
+      let keyword = {
+        'keyword': 'eeting'
+      }
+      let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
+      event.save((err, user) => {
+        chai.request(server)
+          .post('/events/find')
+          .send(keyword)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('array')
+            res.body.length.should.be.eql(1)
+            res.body[0].should.have.property('title').eql('Title event')
+            res.body[0].should.have.property('languages')
+            res.body[0].should.have.property('tags')
+            res.body[0].should.have.property('locate')
+            res.body[0].should.have.property('_id').eql(event.id)
+            done()
+          })
+      })
+    })
+  })
+
   describe('/GET/:id event', () => {
     it('it should GET a event by the given id', (done) => {
       let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
@@ -131,7 +218,9 @@ describe('Events', () => {
           .send({
             avatar: "newLogo.png",
             title: "newTitle",
-            locate: { coor: "456"},
+            locate: {
+              coor: "456"
+            },
             description: "This is the new short description",
             tags: ["Meeting", "Party"],
             languages: ["English", "Spanish"]
@@ -142,7 +231,9 @@ describe('Events', () => {
             res.body.should.have.property('message').eql('Event has been updated')
             res.body.event.should.have.property('avatar').eql('newLogo.png')
             res.body.event.should.have.property('title').eql('newTitle')
-            res.body.event.should.have.property('locate').eql({ coor: "456"})
+            res.body.event.should.have.property('locate').eql({
+              coor: "456"
+            })
             res.body.event.should.have.property('description').eql('This is the new short description')
             res.body.event.should.have.property('languages').eql(["English", "Spanish"])
             res.body.event.should.have.property('tags').eql(["Meeting", "Party"])
@@ -168,7 +259,53 @@ describe('Events', () => {
     })
   })
 
-  // TODO
+  describe('/PUT/add-follower/ :id user', () => {
+    it('it should ADD new follower by the given user id', (done) => {
+      let event = getEvent('Test text.')
+      event.save((err, user) => {
+        chai.request(server)
+          .put('/events/add-follower/' + event.id)
+          .send({
+            followerId: '5a6d935d4b60a06aacada294'
+          })
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('object')
+            res.body.should.have.property('message').eql('The User has been added')
+            res.body.result.should.have.property('nModified').eql(1)
+            done()
+          })
+      })
+    })
+  })
+
+  describe('/PUT/remove-follower/ :id user', () => {
+    it('it should REMOVE a follower by the given user id', (done) => {
+      let event = getEvent('Test text.')
+      event.save((err, user) => {
+        chai.request(server)
+          .put('/events/' + event.id)
+          .send({
+            followers: ['5a6d935d4b60a06aacada294', '5a6d935d4b60a06aacada293']
+          })
+          .end((err, res) => {
+            chai.request(server)
+              .put('/events/remove-follower/' + event.id)
+              .send({
+                followerId: '5a6d935d4b60a06aacada294'
+              })
+              .end((err, res) => {
+                res.should.have.status(200)
+                res.body.should.be.a('object')
+                res.body.should.have.property('message').eql('The User has been removed')
+                res.body.result.should.have.property('nModified').eql(1)
+                done()
+              })
+          })
+      })
+    })
+  })
+
   describe('/DELETE/:id event', () => {
     it('it should DELETE a event given the id', (done) => {
       let event = getEvent('Test text.')
