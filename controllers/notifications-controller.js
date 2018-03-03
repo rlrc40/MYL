@@ -8,6 +8,7 @@ module.exports = router
 router.post('/send', send)
 router.get('/user/:userId', getNotificationsByUserId)
 router.put('/:notificationId', update)
+router.put('/change-state/:notificationId', changeState)
 router.delete('/:notificationId', _delete)
 
 
@@ -25,6 +26,10 @@ function getNotificationsByUserId(req, res) {
 // PUT
 function update(req, res) {
     notificationService.update(req, res)
+}
+
+function changeState(req, res) {
+    notificationService.changeState(req, res)
 }
 
 // DELETE
