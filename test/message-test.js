@@ -6,13 +6,15 @@ let Message = require('../models/Message')
 //Require the dev-dependencies
 let chai = require('chai')
 let chaiHttp = require('chai-http')
-let server = require('../server')
+let server = require('../index')
 let should = chai.should()
 
 const getMessage = (text) => new Message({
-  from: "5a78800f2b225224f01d167a",
-  to: "5b78800f2b225224f01d167b",
-  text: text
+  participants: ["5a78800f2b225224f01d167a", "5b78800f2b225224f01d167b"],
+  messages: {
+    sender: '5a78800f2b225224f01d167a',
+    text: text
+  }
 })
 
 chai.use(chaiHttp)
@@ -34,10 +36,10 @@ describe('Messages', () => {
           res.should.have.status(200)
           res.body.should.be.a('object')
           res.body.information.should.to.be.eql('Message has been sent')
-          res.body.message.should.have.property('to')
-          res.body.message.should.have.property('from')
-          res.body.message.should.have.property('text')
-          res.body.message.should.have.property('answers')
+          res.body.message.should.have.property('participants')
+          res.body.message.should.have.property('messages')
+          res.body.message.messages[0].should.have.property('sender')
+          res.body.message.messages[0].should.have.property('text')
           done()
         })
     })
@@ -66,10 +68,9 @@ describe('Messages', () => {
           .end((err, res) => {
             res.should.have.status(200)
             res.body.should.be.a('object')
-            res.body.should.have.property('to')
-            res.body.should.have.property('from')
-            res.body.should.have.property('text')
-            res.body.should.have.property('answers')
+            res.body.should.have.property('messages')
+            res.body.messages[0].should.have.property('sender')
+            res.body.messages[0].should.have.property('text')
             res.body.should.have.property('_id').eql(message.id)
             done()
           })
@@ -81,19 +82,25 @@ describe('Messages', () => {
     it('it should GET messages by the given idUser', (done) => {
       let userId = "5a78800f2b225224f01d167a"
       let m1 = new Message({
-        from: userId,
-        to: "5b78800f2b225224f01d167b",
-        text: "message 1"
+        participants: [userId, "5b78800f2b225224f01d167b"],
+        messages: [{
+          sender: userId,
+          text: "message 1"
+        }]
       })
       let m2 = new Message({
-        from: "5a78800f2b225224f01d167c",
-        to: userId,
-        text: "message 2"
+        participants: ["5a78800f2b225224f01d167c", userId],
+        messages: [{
+          sender: "5a78800f2b225224f01d167c",
+          text: "message 2"
+        }]
       })
       let m3 = new Message({
-        from: "5a78800f2b225224f01d167d",
-        to: userId,
-        text: "message 3"
+          participants: ["5a78800f2b225224f01d167d", userId],
+          messages: [{
+            sender: "5a78800f2b225224f01d167d",
+            text: "message 3"
+          }]
       })
       m1.save((err, m1) => {
         m2.save((err, m2) => {
@@ -115,17 +122,23 @@ describe('Messages', () => {
   describe('/PUT/:id message', () => {
     it('it should UPDATE a message given the id', (done) => {
       let message = getMessage('Test text.')
+      let newMessage = {
+        sender: message.participants[1],
+        text: 'New test text.'
+      }
       message.save((err, message) => {
+        message.messages.push(newMessage)
+        let update = message.messages
         chai.request(server)
           .put('/messages/' + message.id)
           .send({
-            text: 'New test text.'
+            messages: update
           })
           .end((err, res) => {
             res.should.have.status(200)
             res.body.should.be.a('object')
             res.body.should.have.property('information').eql('Message to ' + res.body.message.to + ' has been updated')
-            res.body.message.should.have.property('text').eql('New test text.')
+            res.body.message.messages[1].should.have.property('text').eql('New test text.')
             done()
           })
       })
@@ -143,6 +156,27 @@ describe('Messages', () => {
           res.body.should.have.property('information').eql("Message not found")
           done()
         })
+    })
+  })
+
+  describe('/PUT/ANSWER/:id message', () => {
+    it('it should ANSWER a message given the id', (done) => {
+      let message = getMessage('Test text.')
+      let newMessage = {
+        sender: message.participants[1],
+        text: 'New test text.'
+      }
+      message.save((err, message) => {
+        chai.request(server)
+          .put('/messages/answer/' + message.id)
+          .send(newMessage)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('object')
+            res.body.should.have.property('information').eql('Answer was sent')
+            done()
+          })
+      })
     })
   })
 

@@ -2,13 +2,17 @@ const mongoose = require('mongoose')
 const ObjectId = mongoose.Schema.Types.ObjectId
 
 const MessageSchema = new mongoose.Schema({
-	from: ObjectId,
-	to: ObjectId,
-	text: {
-		type: String,
-		required: true
+	participants: {
+		type: [ObjectId],
+		required: 'participants are required'
 	},
-	answers: [ObjectId],
+	messages: [{
+		sender: ObjectId,
+		text: {
+	    required: 'text of message is required',
+			type: String
+		},
+	}],
   created_at: { type: Date, default: Date.now }
 })
 

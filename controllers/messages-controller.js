@@ -9,6 +9,7 @@ router.post('/send', send)
 router.get('/:messageId', getMessageById)
 router.get('/user/:userId', getMessagesByUserId)
 router.put('/:messageId', update)
+router.put('/answer/:messageId', answer)
 router.delete('/:messageId', _delete)
 
 
@@ -30,6 +31,10 @@ function getMessagesByUserId(req, res) {
 // PUT
 function update(req, res) {
     messageService.update(req, res)
+}
+
+function answer(req, res) {
+    messageService.answer(req, res)
 }
 
 // DELETE

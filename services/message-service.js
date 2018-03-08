@@ -5,6 +5,7 @@ service.getMessageById = getMessageById
 service.getMessagesByUserId = getMessagesByUserId
 service.create = create
 service.update = update
+service.answer = answer
 service._delete = _delete
 
 module.exports = service
@@ -14,11 +15,7 @@ module.exports = service
 function getMessagesByUserId(req, res) {
   let userId = req.params.userId
   Message.find({
-    $or: [{
-      "from": userId
-    }, {
-      "to": userId
-    }]
+    participants: userId
   }, (err, messages) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!messages) return res.status(404).send({
@@ -44,12 +41,9 @@ function create(req, res) {
   let messageParam = req.body
   let message = new Message()
 
-  message.from = messageParam.from
-  message.to = messageParam.to
-  message.text = messageParam.text
-  message.answers = []
+  message.participants = messageParam.participants
+  message.messages = messageParam.messages,
   message.created_at = Date.now()
-
 
   message.save((err, messageSent) => {
     if (err) return res.status(500).send({
@@ -82,6 +76,26 @@ function update(req, res) {
   })
 }
 
+function answer(req, res) {
+  let messageId = req.params.messageId
+  let message = req.body
+
+  Message.update(
+    { "_id": messageId },
+    { "$push": { "messages": message } }, (err, messageUpdated) => {
+      if (err) return res.status(500).send({
+        information: 'Error at update message: ' + err.message
+      })
+      if (!messageUpdated) return res.status(404).send({
+        information: 'Message not found'
+      })
+      res.status(200).send({
+        information: 'Answer was sent',
+        message: messageUpdated
+      })
+  })
+}
+
 function _delete(req, res) {
   let messageId = req.params.messageId
 
@@ -96,15 +110,6 @@ function _delete(req, res) {
     message.remove(err => {
       if (err) return res.status(500).send({
         information: "Error at deleting message: " + messageId
-      })
-
-      message.answers.map(function(answer) {
-        Message.findById(answer, (err, ans) => {
-          ans.remove(err => {})
-          if (err) return res.status(500).send({
-            information: "Error at deleting answer: " + messageId
-          })
-        })
       })
 
       res.status(200).send({
