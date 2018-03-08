@@ -1,8 +1,8 @@
 //During the test the env variable is set to test
 process.env.NODE_ENV = 'test'
 
-let mongoose = require("mongoose")
 let Group = require('../models/Group')
+let User = require('../models/User')
 
 //Require the dev-dependencies
 let chai = require('chai')
@@ -10,13 +10,38 @@ let chaiHttp = require('chai-http')
 let server = require('../index')
 let should = chai.should()
 
-const getGroup = (name) => new Group({
-  creator: '5a84354a95fb0d2f509a500b',
+const getGroup = (name, creatorId) => new Group({
+  creator: creatorId,
 	name: name,
 	description: 'Description text',
 	avatar: 'avatar2.jpg',
-	languages: ['English', 'Spanish'],
+	languages: ['English'],
 	members: []
+})
+
+const getUser = (email) => new User({
+  name: "Test",
+  email: email,
+  description: "blablabla",
+  age: 24,
+  gender: 'M',
+  occupation: '',
+  password: '',
+  nativeLanguage: 'Spanish',
+  languagesToLearn: ['English', 'French'],
+  facebookAddress: [],
+  facebookAvatar: '',
+  facebookLikedPages: [],
+  facebookGroups: ['Group1', 'Group2'],
+  facebookMusic: ['smrtdeath', 'Shakira'],
+  facebookMovies: ['RockAndRolla', 'The Beatles'],
+  facebookBooks: ['Historias Nórdicas', 'Book'],
+  facebookSeries: ['Big Bang Theory', 'Vikings'],
+  facebookSports: ['Futbol', 'Skate'],
+  facebookFriends: ['Pedro', 'Juan'],
+  instagramAccount: 'instagramAccount',
+  twitterAccount: 'twitterAccount',
+  skype: 'testSkype'
 })
 
 chai.use(chaiHttp)
@@ -24,7 +49,7 @@ chai.use(chaiHttp)
 describe('Groups', () => {
   beforeEach((done) => { //Before each test we empty the database
       Group.remove({}, (err) => {
-         done()
+        done()
       })
   })
 
@@ -42,8 +67,10 @@ describe('Groups', () => {
 
   describe('/POST a group', () => {
       it('it should CREATE a new group', (done) => {
-        let group = getGroup('Erasmus')
-        chai.request(server)
+        let user = getUser('userOne@email.com')
+        user.save((err, user) => {
+          let group = getGroup('Erasmus', user.id)
+          chai.request(server)
             .post('/groups/register')
             .send(group)
             .end((err, res) => {
@@ -51,19 +78,21 @@ describe('Groups', () => {
                 res.body.should.be.a('object')
                 res.body.message.should.to.be.eql('Group Erasmus has been created')
                 res.body.group.should.be.a('object')
-                res.body.group.should.have.property('creator')
+                res.body.group.should.have.property('creator').eql(user.id)
                 res.body.group.should.have.property('name')
                 res.body.group.should.have.property('description')
                 res.body.group.should.have.property('avatar')
                 res.body.group.should.have.property('languages')
-                res.body.group.should.have.property('members')
-              done()
+                res.body.group.members.length.should.be.eql(1)
+                done()
             })
+          })
       })
+
   })
 
   describe('/POST group with existing name', () => {
-    it('it should FAIL at CREATE the new group', (done) => {
+    it('it should NOT CREATE a new group', (done) => {
       let group = getGroup('Madrid')
       group.save((err, group) => {
         chai.request(server)
@@ -80,7 +109,7 @@ describe('Groups', () => {
   })
 
   describe('/POST group with empty name', () => {
-    it('it SHOULD NOT CREATE the new group with no name', (done) => {
+    it('it SHOULD NOT CREATE a new group without name', (done) => {
       let group = getGroup()
         chai.request(server)
             .post('/groups/register')
@@ -112,8 +141,7 @@ describe('Groups', () => {
       })
   })
 
-
-  describe('/PUT/:id group', () => {
+    describe('/PUT/:id group', () => {
       it('it should UPDATE a group given the id', (done) => {
         let group = getGroup('Paris')
         group.save((err, group) => {
@@ -131,7 +159,7 @@ describe('Groups', () => {
   })
 
   describe('/PUT/:id unexistent group', () => {
-      it('it should not UPDATE a group given a wrong id', (done) => {
+      it('it should NOT UPDATE the group given a wrong id', (done) => {
         let group = getGroup('Roma')
         group.save((err, group) => {
                 chai.request(server)
@@ -146,6 +174,104 @@ describe('Groups', () => {
           })
       })
   })
+
+  describe('/GET/:userId groups', () => {
+    it('it should GET some groups given a user id', (done) => {
+      let user = getUser('userOne@email.com')
+      user.save((err, user) => {
+        let group = getGroup('Students', user.id)
+        group.save((err, group) => {
+          group.update({
+            members: [user.id]
+          }, (err, group) => {
+            chai.request(server)
+                .get('/groups/user/'+ user.id)
+                .end((err, res) => {
+                  res.should.have.status(200)
+                  res.body.should.be.a('object')
+                  res.body.groups.length.should.be.eql(1)
+                  res.body.groups[0].name.should.be.eql('Students')
+                  done()
+                })
+              })
+          })
+        })
+      })
+ })
+
+ describe('/GET groups by name', () => {
+    it('it should GET groups given a name', (done) => {
+      let searchName = {
+        name: 'recip'
+      }
+      let group = getGroup('Recipes')
+      group.save((err, group) => {
+        chai.request(server)
+          .post('/groups/find/name')
+          .send(searchName)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('object')
+            res.body.groups.length.should.be.eql(1)
+            res.body.groups[0].name.should.be.eql('Recipes')
+            res.body.groups[0]['_id'].should.be.eql(group.id)
+            done()
+          })
+      })
+    })
+})
+
+describe('/GET groups by search', () => {
+   it('it should GET groups given a name', (done) => {
+     let searchName = {
+       search: 'barcelo'
+     }
+     let group = getGroup('Barcelona')
+     group.save((err, group) => {
+       chai.request(server)
+         .post('/groups/find')
+         .send(searchName)
+         .end((err, res) => {
+           res.should.have.status(200)
+           res.body.should.be.a('object')
+           res.body.groups.length.should.be.eql(1)
+           res.body.groups[0].name.should.be.eql('Barcelona')
+           res.body.groups[0]['_id'].should.be.eql(group.id)
+           done()
+         })
+     })
+   })
+})
+
+
+describe('/GET groups by languages', () => {
+   it('it should GET groups that match with given languages', (done) => {
+      let languages = {
+        languages: 'English'
+      }
+      let group = getGroup('Spain')
+      let group2 = getGroup('Paris')
+      let group3 = getGroup('Rome')
+      group.save((err, group) => {
+        group2.save((err, group2) => {
+          group3.save((err, group3) => {
+            chai.request(server)
+              .post('/groups/find')
+              .send(languages)
+              .end((err, res) => {
+                res.should.have.status(200)
+                res.body.should.be.a('object')
+                res.body.groups.length.should.be.eql(3)
+                res.body.groups.map((group) => {
+                      group['languages'].should.be.eql(['English'])
+                })
+                done()
+              })
+		        })
+		    })
+      })
+    })
+})
 
   describe('/DELETE/:id group', () => {
       it('it should DELETE a group given the id', (done) => {
@@ -164,7 +290,7 @@ describe('Groups', () => {
   })
 
   describe('/DELETE/:id group not found', () => {
-      it('it should fail at DELETE a group given the id; the group doesn´t exist', (done) => {
+      it('it should fail REMOVING a non-existen group', (done) => {
         let group = getGroup('Italy')
         group.save((err, group) => {
                 chai.request(server)

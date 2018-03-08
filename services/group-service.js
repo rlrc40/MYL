@@ -3,12 +3,16 @@ const Group = require('../models/Group')
 
 var service = {}
 service.getAllGroups = getAllGroups
-service.getGroupById = getGroupById
-service.getGroupsByUserId = getGroupsByUserId
-service.getGroupsByLang = getGroupsByLang
-service.getGroupsBySearch = getGroupsBySearch
+service.findGroupById = findGroupById
+service.findGroupsByUserId = findGroupsByUserId
+service.findGroupsByLang = findGroupsByLang
+service.findGroupsByName = findGroupsByName
+service.findGroupsBySearch = findGroupsBySearch
+service.findGroupsByFilter = findGroupsByFilter
 service.create = validateGroupName
 service.update = update
+service.addMember = addMember
+service.removeMember = removeMember
 service._delete = _delete
 
 module.exports = service
@@ -29,7 +33,7 @@ function getAllGroups(req, res) {
     })
 }
 
-function getGroupsByUserId(req, res) {
+function findGroupsByUserId(req, res) {
     let userId = req.params.userId
     Group.find(
       { members: userId },(err, groups) => {
@@ -45,7 +49,7 @@ function getGroupsByUserId(req, res) {
     })
 }
 
-function getGroupById(req, res) {
+function findGroupById(req, res) {
     let groupId = req.params.groupId
     Group.findById(
         groupId, (err, group) => {
@@ -61,10 +65,10 @@ function getGroupById(req, res) {
     })
 }
 
-function getGroupsByLang(req, res) {
-    let languages = new RegExp(req.params.languages, 'i')
+function findGroupsByFilter(req, res) {
+    let filters=
     Group.find(
-      { languages: {$regex: languages}},
+      {},
       (err, groups) => {
             if (err) return res.status(500).send(
               err.name + ': ' + err.message
@@ -78,12 +82,47 @@ function getGroupsByLang(req, res) {
     })
 }
 
-function getGroupsBySearch(req, res) {
-    let search = new RegExp(req.params.search, 'i')
+function findGroupsByLang(req, res) {
+    let languages = new RegExp(req.params.languages, 'i')
+    Group.find(
+      { languages: {$regex: languages} },
+      (err, groups) => {
+            if (err) return res.status(500).send(
+              err.name + ': ' + err.message
+            )
+            if (!groups) return res.status(404).send({
+              message: "Groups not found"
+            })
+            res.status(200).send({
+              groups
+            })
+    })
+}
+
+function findGroupsByName(req, res) {
+    let name = new RegExp(req.body.name, 'i')
+    Group.find(
+      { name: {$regex: name} },
+      (err, groups) => {
+            if (err) return res.status(501).send(
+              err.name + ': ' + err.message
+            )
+            if (!groups) return res.status(404).send({
+              message: "Groups not found"
+            })
+            res.status(200).send({
+              groups
+            })
+    })
+}
+
+function findGroupsBySearch(req, res) {
+    let search = new RegExp(req.body.search, 'i')
     Group.find({
       $or: [
-        {name: {$regex: search}},
-        {description: {$regex: search}}
+        { name: {$regex: search} },
+        { description: {$regex: search} },
+        { languages: {$regex: search} }
       ]
     }, (err, groups) => {
             if (err) return res.status(500).send(
@@ -120,7 +159,7 @@ function create(req, res) {
         groupStored.members.map(memberId => {
 
           User.findByIdAndUpdate(memberId,
-            { $push: { groups: groupStored.id} },
+            { $addToSet: { groups: groupStored.id} },
              (err, memberUpdated) => {
                 if (err) return res.status(500).send({
                   message: 'Error updating member: ' + err.message
@@ -168,6 +207,44 @@ function update(req, res) {
       res.status(200).send({
         message: 'Group has been updated'
       })
+    })
+}
+
+function addMember(req, res) {
+    let userId = req.params.userId
+    let groupId = req.params.groupId
+
+    Group.findByIdAndUpdate(groupId,
+      { $push: {members: userId}},
+      (err, groupUpdated) => {
+        if (err) return res.status(500).send(
+          'Error updating the group: ' + err.message
+        )
+        if (!groupUpdated) return res.status(404).send({
+          message: 'Group not found'
+        })
+        res.status(200).send({
+          message: 'Member has been removed'
+        })
+    })
+}
+
+function removeMember(req, res) {
+    let userId = req.params.userId
+    let groupId = req.params.groupId
+
+    Group.findByIdAndUpdate(groupId,
+      { $pull: {members: userId}},
+      (err, groupUpdated) => {
+        if (err) return res.status(500).send(
+          'Error updating the group: ' + err.message
+        )
+        if (!groupUpdated) return res.status(404).send({
+          message: 'Group not found'
+        })
+        res.status(200).send({
+          message: 'Member has been removed'
+        })
     })
 }
 

@@ -6,12 +6,16 @@ module.exports = router
 
 // routes
 router.post('/register', register)
+router.post('/find/lang', findGroupsByLang)
+router.post('/filter', findGroupsByFilter)
+router.post('/find/name', findGroupsByName)
+router.post('/find', findGroupsBySearch)
 router.get('/', getAllGroups)
-router.get('/user/:userId', getGroupsByUserId)
-router.get('/languages/:languages', getGroupsByLang)
-router.get('/search/:search', getGroupsBySearch)
-router.get('/:groupId', getGroupById)
+router.get('/user/:userId', findGroupsByUserId)
+router.get('/:groupId', findGroupById)
 router.put('/:groupId', update)
+router.put('/add/:userId', addMember)
+router.put('/remove/:userId', removeMember)
 router.delete('/:groupId', _delete)
 
 
@@ -25,23 +29,35 @@ function getAllGroups(req, res) {
     groupService.getAllGroups(req, res)
 }
 
-function getGroupsByUserId(req, res) {
-    groupService.getGroupsByUserId(req, res)
+function findGroupsByUserId(req, res) {
+    groupService.findGroupsByUserId(req, res)
 }
 
-function getGroupsByLang(req, res) {
-    groupService.getGroupsByLang(req, res)
+function findGroupsByLang(req, res) {
+    groupService.findGroupsByLang(req, res)
 }
 
-function getGroupsBySearch(req, res) {
-    groupService.getGroupsBySearch(req, res)
+function findGroupsByName(req, res) {
+    groupService.findGroupsByName(req, res)
 }
 
-function getGroupById(req, res) {
-    groupService.getGroupById(req, res)
+function findGroupsByFilter(req, res) {
+    groupService.findGroupsByFilter(req, res)
+}
+
+function findGroupsBySearch(req, res) {
+    groupService.findGroupsBySearch(req, res)
+}
+
+function findGroupById(req, res) {
+    groupService.findGroupById(req, res)
 }
 
 // PUT
+function addMember(req, res) {
+    groupService.addMember(req, res)
+}
+
 function update(req, res) {
     groupService.update(req, res)
 }
@@ -49,4 +65,8 @@ function update(req, res) {
 // DELETE
 function _delete(req, res) {
     groupService._delete(req, res)
+}
+
+function removeMember(req, res) {
+    groupService.removeMember(req, res)
 }
