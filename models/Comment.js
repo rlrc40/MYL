@@ -1,24 +1,30 @@
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Schema.Types.ObjectId
+const slug = require('mongoose-slug-generator')
+
+mongoose.plugin(slug)
+
 
 const CommentSchema = new mongoose.Schema({
-  from: {
-    type: ObjectId,
-    required: 'from is required'
+	author: {
+		type: ObjectId,
+		required: 'Required author'
   },
-  text: {
+  discussion_id: {
+    type: ObjectId,
+    required: 'Required id'
+  },
+  discussion_childs:{
+    type: Array,
+  },
+  slug: {
+    type: String,
+  },
+  bodyText: {
     type: String,
     max: 200
   },
-  likes: {
-    type: Number,
-    min: 0
-  },
-  answers: [ObjectId],
-  created_at: {
-    type: Date,
-    default: Date.now
-  },
+  created_at: { type: Date, default: Date.now }
 })
 
 module.exports = mongoose.model('Comment', CommentSchema)
