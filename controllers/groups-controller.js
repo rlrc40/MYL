@@ -6,7 +6,6 @@ module.exports = router
 
 // routes
 router.post('/register', register)
-router.post('/find/lang', findGroupsByLang)
 router.post('/filter', findGroupsByFilter)
 router.post('/find/name', findGroupsByName)
 router.post('/find', findGroupsBySearch)
@@ -31,10 +30,6 @@ function getAllGroups(req, res) {
 
 function findGroupsByUserId(req, res) {
     groupService.findGroupsByUserId(req, res)
-}
-
-function findGroupsByLang(req, res) {
-    groupService.findGroupsByLang(req, res)
 }
 
 function findGroupsByName(req, res) {
