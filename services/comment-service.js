@@ -3,8 +3,10 @@ const Comment = require('../models/Comment')
 
 var service = {}
 
-service.getById = getById
-service.getBySlug = getBySlug
+service.getAll = getAll
+service.getCommentById = getCommentById
+service.findCommentBySlug = findCommentBySlug
+service.getCommentByDiscussionId = getCommentByDiscussionId
 service.postComment = postComment
 service.postReply = postReply
 service.update = update
@@ -12,7 +14,7 @@ service._delete = _delete
 
 module.exports = service
 
-function getById(req, res) {
+function getCommentById(req, res) {
   let commentId = req.params.commentId
 
   Comment.findById(
@@ -26,7 +28,34 @@ function getById(req, res) {
     })
 }
 
-function getBySlug(req, res) {
+function getAll(req, res) {
+  Comment.find({}, (err, comments) => {
+      if (err) return res.status(500).send(err.name + ': ' + err.message)
+      if (!comments) return res.status(404).send({
+        message: 'Comment not found'
+      })
+
+      res.status(200).send(comments)
+    })
+}
+
+function getCommentByDiscussionId(req, res) {
+  let discussionId = req.params.discussionId
+
+  Comment.find({
+      discussion_id:  discussionId
+    }, (err, comment) => {
+      if (err) return res.status(500).send(err.name + ': ' + err.message)
+
+      if (!comment) return res.status(404).send({
+        message: 'Comment not found'
+      })
+
+      res.status(200).send(comment)
+    })
+}
+
+function findCommentBySlug(req, res) {
   let commentSlug = req.params.commentSlug
 
   Comment.find({
@@ -56,7 +85,7 @@ function postComment(req, res) {
 
   comment.save((err, commentStored) => {
     if (err) return res.status(500).send({
-      message: 'Error storing comment in the database'+ err
+      message: 'Error storing comment in the database: ' + err
     })
 
     res.status(200).send({
@@ -67,13 +96,13 @@ function postComment(req, res) {
 }
 
 function postReply(req, res) {
+  let parentId = req.params.parentId
   let commentParam = req.body
   let comment = new Comment()
 
   comment.author = commentParam.author
   comment.discussion_id = commentParam.discussion_id
   comment.discussion_childs = []
-  comment.slug =
   comment.bodyText = commentParam.bodyText
   comment.posted = Date.now
 
@@ -83,7 +112,7 @@ function postReply(req, res) {
       message: 'Error storing comment reply in the database'
     })
 
-	updateParent(req, res)
+    updateParent(parentId, commentStored.id)
 
     res.status(200).send({
       message: 'Comment reply stored',
@@ -92,22 +121,18 @@ function postReply(req, res) {
   })
 }
 
-function updateParent(req, res) {
-  let parentId = req.params.parentId
-  let childId = req.params.childId
+function updateParent(parentId, childId) {
 
-  Group.findByIdAndUpdate(parentId,
+  Comment.findByIdAndUpdate(parentId,
       { $addToSet: {discussion_childs: childId} },
       (err, parentUpdated) => {
         if (err) return res.status(500).send(
           'Error updating the parent: ' + err.message
         )
-        if (!groupUpdated) return res.status(404).send({
+        if (!parentUpdated) return res.status(404).send({
           message: 'Parent not found'
         })
-        res.status(200).send({
-          message: 'Parent updated'
-        })
+        console.log('Parent updated:' + parentUpdated)
     })
 }
 

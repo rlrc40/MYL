@@ -5,12 +5,14 @@ const commentService = require('../services/comment-service.js')
 module.exports = router
 
 // routes
-router.post('/post', postComment)
-router.post('/reply', postReply)
-router.get('/:slug', getCommentBySlug)
+router.get('/', getAll)
 router.get('/:commentId', getCommentById)
+router.get('/discussion/:discussionId', getCommentByDiscussionId)
+router.get('/find/:slug', findCommentBySlug)
+router.post('/post', postComment)
+router.post('/post/:parentId', postReply)
 router.put('/:slug', update)
-router.delete('/:slug', _delete)
+router.delete('/:commentId', _delete)
 
 // POST
 function postComment(req, res) {
@@ -22,8 +24,16 @@ function postReply(req, res) {
 }
 
 // GET
-function getCommentBySlug(req, res) {
-    commentService.getBySlug(req, res)
+function getAll(req, res) {
+    commentService.getAll(req, res)
+}
+
+function findCommentBySlug(req, res) {
+    commentService.findCommentBySlug(req, res)
+}
+
+function getCommentByDiscussionId(req, res) {
+    commentService.getCommentByDiscussionId(req, res)
 }
 
 function getCommentById(req, res) {
