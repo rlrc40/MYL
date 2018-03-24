@@ -21,7 +21,7 @@ function create(req, res) {
 
   event.creator = eventParam.creator
   if(req.file) {
-    event.avatar = req.file.originalname
+    event.avatar = req.file.filename
     event.languages = eventParam.languages.split(",")
     event.followers = eventParam.followers.split(",")
     event.tags = eventParam.tags.split(",")

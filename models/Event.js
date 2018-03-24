@@ -11,8 +11,7 @@ const EventSchema = new mongoose.Schema({
     required: 'creator is required'
   },
   avatar: {
-    type: String,
-    match: [/^.*\.(jpg|jpeg|png|gif)$/i, 'Only valid .jpeg or .png files.']
+    type: String
   },
   title: {
     type: String,

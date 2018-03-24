@@ -8,12 +8,26 @@ const storage = multer.diskStorage({
     cb(null, 'event-pictures')
   },
   filename: function(req, file, cb){
-    cb(null, file.originalname)
+    cb(null, new Date().toISOString().replace(/[^\w\s]/gi, '') + file.originalname)
   }
 })
 
+const fileFilter = (req, file, cb) => {
+
+  if (file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+    cb(null, true)
+  } else {
+    // reject a file
+    cb(null, false)
+  }
+}
+
 const upload = multer({
-  storage: storage
+  storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5
+  },
+  fileFilter
 })
 
 module.exports = router
