@@ -20,8 +20,7 @@ const getEvent = (text, followers) => new Event({
     coord: "123"
   },
   date: new Date("October 13, 2014 11:13:00"),
-  languages: ["Spanish"],
-  dateExpired: new Date("October 13, 2018 11:13:00")
+  languages: "Spanish"
 })
 
 chai.use(chaiHttp)
@@ -52,7 +51,6 @@ describe('Events', () => {
           res.body.event.should.have.property('languages')
           res.body.event.should.have.property('followers')
           res.body.event.should.have.property('tags')
-          res.body.event.should.have.property('dateExpired')
           done()
         })
     })
@@ -66,7 +64,7 @@ describe('Events', () => {
         .send(event)
         .end((err, res) => {
           res.should.have.status(500)
-          res.body.should.have.property('message').eql('Error when creating the event to the database')
+          res.body.should.have.property('message').eql('Events validation failed: title: title is required')
           done()
         })
     })
@@ -95,7 +93,6 @@ describe('Events', () => {
             res.body[0].should.have.property('languages')
             res.body[0].should.have.property('followers')
             res.body[0].should.have.property('tags')
-            res.body[0].should.have.property('dateExpired')
             res.body[0].should.have.property('_id').eql(event.id)
             done()
           })
@@ -175,7 +172,6 @@ describe('Events', () => {
             res.body.should.have.property('languages')
             res.body.should.have.property('followers')
             res.body.should.have.property('tags')
-            res.body.should.have.property('dateExpired')
             res.body.should.have.property('_id').eql(event.id)
             done()
           })

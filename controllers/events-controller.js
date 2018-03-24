@@ -1,11 +1,25 @@
 const express = require('express')
 const router = express.Router()
 const eventService = require('../services/event-service.js')
+const multer = require('multer')
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb){
+    cb(null, 'event-pictures')
+  },
+  filename: function(req, file, cb){
+    cb(null, file.originalname)
+  }
+})
+
+const upload = multer({
+  storage: storage
+})
 
 module.exports = router
 
 // routes
-router.post('/create', create)
+router.post('/create', upload.single('avatar'), create)
 router.post('/find/title/', findEventsByEventNameTitle)
 router.post('/find/', findEventsBySearch)
 router.post('/filter/', findEventsByFilter)

@@ -20,20 +20,28 @@ function create(req, res) {
   let event = new Event()
 
   event.creator = eventParam.creator
-  event.avatar = eventParam.avatar
+  if(req.file) {
+    event.avatar = req.file.originalname
+    event.languages = eventParam.languages.split(",")
+    event.followers = eventParam.followers.split(",")
+    event.tags = eventParam.tags.split(",")
+  } else {
+    event.languages = eventParam.languages
+    event.followers = eventParam.followers
+    event.tags = eventParam.tags
+    event.avatar = ""
+  }
   event.title = eventParam.title
   event.description = eventParam.description
   event.locate = eventParam.locate
   event.date = eventParam.date
-  event.languages = eventParam.languages
-  event.followers = eventParam.followers
-  event.tags = eventParam.tags
-  event.dateExpired = eventParam.dateExpired
   event.created_at = Date.now()
+
 
   event.save((err, eventSent) => {
     if (err) return res.status(500).send({
-      message: 'Error when creating the event to the database'
+      message: err.message
+      // message: 'Error when creating the event to the database'
     })
     res.status(200).send({
       message: 'Event has been created',
