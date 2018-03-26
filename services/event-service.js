@@ -96,18 +96,20 @@ function findEventsBySearch(req, res) {
 function findEventsByFilter(req, res) {
   let languages = req.body.languages
   let tags = req.body.tags
-  let date = req.body.date
 
   Event.find({
-    $and: [{
-      languages: {
-        $in: [languages]
+    $or: [
+      {
+        languages: {
+          $in: [languages]
+        }
       },
-      tags: {
-        $in: [tags]
-      },
-      date: date
-    }]
+      {
+        tags: {
+          $in: [tags]
+        }
+      }
+  ]
   }, (err, events) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!events) return res.status(404).send({

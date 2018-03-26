@@ -35,8 +35,8 @@ module.exports = router
 // routes
 router.post('/create', upload.single('avatar'), create)
 router.post('/find/title/', findEventsByEventNameTitle)
-router.post('/find/', findEventsBySearch)
-router.post('/filter/', findEventsByFilter)
+router.post('/search/', findEventsBySearch)
+router.post('/find/', findEventsByFilter)
 router.get('/', getAll)
 router.get('/:eventId', getEventById)
 router.get('/user/:userId', getEventsByUserId)
