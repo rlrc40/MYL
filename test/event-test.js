@@ -15,12 +15,12 @@ const getEvent = (text, followers) => new Event({
   title: text,
   description: "Esta es una pequeña descripción acerca del evento.",
   followers: followers,
-  tags: "Meeting",
+  tags: ["Meeting"],
   locate: {
-    coord: "123"
+    country: "Spain"
   },
   date: new Date("October 13, 2014 11:13:00"),
-  languages: "Spanish"
+  languages: ["Spanish"]
 })
 
 chai.use(chaiHttp)
@@ -105,12 +105,12 @@ describe('Events', () => {
       let filter = {
         languages: 'Spanish',
         tags: 'Meeting',
-        date: new Date("October 13, 2014 11:13:00")
+        country: "Spain"
       }
       let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
       event.save((err, user) => {
         chai.request(server)
-          .post('/events/filter')
+          .post('/events/find')
           .send(filter)
           .end((err, res) => {
             res.should.have.status(200)
@@ -119,7 +119,6 @@ describe('Events', () => {
             res.body[0].should.have.property('title').eql('Title event')
             res.body[0].should.have.property('languages')
             res.body[0].should.have.property('tags')
-            res.body[0].should.have.property('date')
             res.body[0].should.have.property('_id').eql(event.id)
             done()
           })
@@ -137,7 +136,7 @@ describe('Events', () => {
       let event = getEvent('Title event', ["5a7dd8d589fd5e44a868946a", "5a7dd8d589fd5e44a868946b"])
       event.save((err, user) => {
         chai.request(server)
-          .post('/events/find')
+          .post('/events/find/title')
           .send(keyword)
           .end((err, res) => {
             res.should.have.status(200)

@@ -25,21 +25,22 @@ function create(req, res) {
     event.languages = eventParam.languages.split(",")
     event.followers = eventParam.followers.split(",")
     event.tags = eventParam.tags.split(",")
+    event.locate = JSON.parse(eventParam.locate)
   } else {
     event.languages = eventParam.languages
     event.followers = eventParam.followers
     event.tags = eventParam.tags
     event.avatar = ""
+    event.locate = eventParam.locate
   }
   event.title = eventParam.title
   event.description = eventParam.description
-  event.locate = eventParam.locate
   event.date = eventParam.date
   event.created_at = Date.now()
 
 
   event.save((err, eventSent) => {
-    if (err) return res.status(500).send({
+    if (err)   return res.status(500).send({
       message: err.message
       // message: 'Error when creating the event to the database'
     })
@@ -96,6 +97,7 @@ function findEventsBySearch(req, res) {
 function findEventsByFilter(req, res) {
   let languages = req.body.languages
   let tags = req.body.tags
+  let country = req.body.country
 
   Event.find({
     $or: [
@@ -108,6 +110,9 @@ function findEventsByFilter(req, res) {
         tags: {
           $in: [tags]
         }
+      },
+      {
+        "locate.country": country
       }
   ]
   }, (err, events) => {

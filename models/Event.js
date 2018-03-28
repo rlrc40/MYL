@@ -19,8 +19,7 @@ const EventSchema = new mongoose.Schema({
     max: 100
   },
   locate: {
-    type: JSON,
-    max: 100
+    type: Object
   },
   date: Date,
   description: {
