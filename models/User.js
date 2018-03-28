@@ -46,6 +46,7 @@ const UserSchema = new mongoose.Schema({
     min: 0,
   },
   groups: [ObjectId],
+  events: [ObjectId],
   connections: [ObjectId],
   connectionRequests: [ObjectId],
   myConnectionRequests: [ObjectId],
