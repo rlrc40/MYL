@@ -11,7 +11,7 @@ router.get('/discussion/:discussionId', getCommentByDiscussionId)
 router.get('/find/:slug', findCommentBySlug)
 router.post('/post', postComment)
 router.post('/post/:parentId', postReply)
-router.put('/:slug', update)
+router.put('/:commentId', update)
 router.delete('/:commentId', _delete)
 
 // POST

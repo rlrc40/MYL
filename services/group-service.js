@@ -5,7 +5,6 @@ var service = {}
 service.getAllGroups = getAllGroups
 service.findGroupById = findGroupById
 service.findGroupsByUserId = findGroupsByUserId
-service.findGroupsByLang = findGroupsByLang
 service.findGroupsByName = findGroupsByName
 service.findGroupsBySearch = findGroupsBySearch
 service.findGroupsByFilter = findGroupsByFilter
@@ -66,24 +65,7 @@ function findGroupById(req, res) {
 }
 
 function findGroupsByFilter(req, res) {
-    let filters=
-    Group.find(
-      {},
-      (err, groups) => {
-            if (err) return res.status(500).send(
-              err.name + ': ' + err.message
-            )
-            if (!groups) return res.status(404).send({
-              message: "Groups not found"
-            })
-            res.status(200).send({
-              groups
-            })
-    })
-}
-
-function findGroupsByLang(req, res) {
-    let languages = new RegExp(req.params.languages, 'i')
+    let languages = new RegExp(req.body.languages, 'i')
     Group.find(
       { languages: {$regex: languages} },
       (err, groups) => {

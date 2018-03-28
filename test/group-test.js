@@ -243,7 +243,6 @@ describe('/GET groups by search', () => {
    })
 })
 
-
 describe('/GET groups by languages', () => {
    it('it should GET groups that match with given languages', (done) => {
       let languages = {
