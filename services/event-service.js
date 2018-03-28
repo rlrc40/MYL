@@ -2,7 +2,7 @@ const Event = require('../models/Event')
 
 var service = {}
 service.create = create
-service.findEventsByEventName = findEventsByEventName
+service.findEventsByEventNameTitle = findEventsByEventNameTitle
 service.findEventsBySearch = findEventsBySearch
 service.findEventsByFilter = findEventsByFilter
 service.getAll = getAll
@@ -20,20 +20,29 @@ function create(req, res) {
   let event = new Event()
 
   event.creator = eventParam.creator
-  event.avatar = eventParam.avatar
+  if(req.file) {
+    event.avatar = req.file.filename
+    event.languages = eventParam.languages.split(",")
+    event.followers = eventParam.followers.split(",")
+    event.tags = eventParam.tags.split(",")
+    event.locate = JSON.parse(eventParam.locate)
+  } else {
+    event.languages = eventParam.languages
+    event.followers = eventParam.followers
+    event.tags = eventParam.tags
+    event.avatar = ""
+    event.locate = eventParam.locate
+  }
   event.title = eventParam.title
   event.description = eventParam.description
-  event.locate = eventParam.locate
   event.date = eventParam.date
-  event.languages = eventParam.languages
-  event.followers = eventParam.followers
-  event.tags = eventParam.tags
-  event.dateExpired = eventParam.dateExpired
   event.created_at = Date.now()
 
+
   event.save((err, eventSent) => {
-    if (err) return res.status(500).send({
-      message: 'Error when creating the event to the database'
+    if (err)   return res.status(500).send({
+      message: err.message
+      // message: 'Error when creating the event to the database'
     })
     res.status(200).send({
       message: 'Event has been created',
@@ -42,24 +51,11 @@ function create(req, res) {
   })
 }
 
-function findEventsByEventName(req, res) {
-  let eventName = req.params.eventName
+function findEventsByEventNameTitle(req, res) {
+  let searchNameTitle = new RegExp(req.body.title, 'i')
   Event.find({
-    name: eventName
-  }, (err, events) => {
-    if (err) return res.status(500).send(err.name + ': ' + err.message)
-    if (!events) return res.status(404).send({
-      event: "Not found events"
-    })
-    res.status(200).send(events)
-  })
-}
-
-function findEventsBySearch(req, res) {
-  let keyword = req.params.keyword
-  Event.find({
-    $text: {
-      $search: keyword
+    title: {
+      $regex: searchNameTitle
     }
   }, (err, events) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
@@ -70,13 +66,61 @@ function findEventsBySearch(req, res) {
   })
 }
 
-function findEventsByFilter(req, res) {
-  let filter = req.params.filter
-  Event.find(filter, (err, events) => {
+function findEventsBySearch(req, res) {
+  let keyword = new RegExp(req.body.keyword, 'i')
+  Event.find({
+    $or: [{
+        title: {
+          $regex: keyword
+        }
+      },
+      {
+        description: {
+          $regex: keyword
+        }
+      },
+      {
+        tags: {
+          $regex: keyword
+        }
+      }
+    ]
+  }, (err, events) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!events) return res.status(404).send({
       event: "Not found events"
     })
+    res.status(200).send(events)
+  })
+}
+
+function findEventsByFilter(req, res) {
+  let languages = req.body.languages
+  let tags = req.body.tags
+  let country = req.body.country
+
+  Event.find({
+    $or: [
+      {
+        languages: {
+          $in: [languages]
+        }
+      },
+      {
+        tags: {
+          $in: [tags]
+        }
+      },
+      {
+        "locate.country": country
+      }
+  ]
+  }, (err, events) => {
+    if (err) return res.status(500).send(err.name + ': ' + err.message)
+    if (!events) return res.status(404).send({
+      message: "Events not found"
+    })
+
     res.status(200).send(events)
   })
 }
@@ -138,48 +182,48 @@ function update(req, res) {
 
 function addFollower(req, res) {
   let eventId = req.params.eventId
-  let newFollower = req.body
+  let newFollower = req.body.followerId
 
   Event.update({
     "_id": eventId
   }, {
-    $push: {
+    $addToSet: {
       "followers": newFollower
     }
-  }, (err, eventUpdated) => {
+  }, (err, result) => {
     if (err) return res.status(500).send({
       message: 'Error at add user: ' + err.message
     })
-    if (!eventUpdated) return res.status(404).send({
-      message: 'Event not found'
+    if (result.nModified == 0) return res.status(404).send({
+      message: 'This follower already exists'
     })
     res.status(200).send({
       message: 'The User has been added',
-      event: eventUpdated
+      result: result
     })
   })
 }
 
 function removeFollower(req, res) {
   let eventId = req.params.eventId
-  let deleteFollower = req.body
+  let deleteFollower = req.body.followerId
 
   Event.update({
     "_id": eventId
   }, {
-    $pop: {
-      "followers": deleteFollower
+    $pull: {
+      'followers': deleteFollower
     }
-  }, (err, eventUpdated) => {
+  }, (err, result) => {
     if (err) return res.status(500).send({
       message: 'Error at remove user: ' + err.message
     })
-    if (!eventUpdated) return res.status(404).send({
+    if (result.nModified == 0) return res.status(404).send({
       message: 'Event not found'
     })
     res.status(200).send({
       message: 'The User has been removed',
-      event: eventUpdated
+      result: result
     })
   })
 }

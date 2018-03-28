@@ -102,6 +102,24 @@ describe('Notifications', () => {
     })
   })
 
+  describe('/PUT/changeState/ :id notification', () => {
+    it('it should CHANGE the state of a notification given the id', (done) => {
+      let notification = getNotification('message', 'You have received a message.')
+      notification.save((err, notification) => {
+        chai.request(server)
+          .put('/notifications/change-state/' + notification.id)
+          .send()
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('object')
+            res.body.should.have.property('information').eql('The state of notification has been changed')
+            res.body.result.should.have.property('nModified').eql(1)
+            done()
+          })
+      })
+    })
+  })
+
   describe('/PUT/:id notification (NOT FOUND)', () => {
     it('it should NOT UPDATE a notification given the id', (done) => {
       chai.request(server)

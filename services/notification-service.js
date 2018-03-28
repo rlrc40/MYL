@@ -4,6 +4,7 @@ var service = {}
 service.getNotificationsByUserId = getNotificationsByUserId
 service.create = create
 service.update = update
+service.changeState = changeState
 service._delete = _delete
 
 module.exports = service
@@ -62,6 +63,31 @@ function update(req, res) {
     res.status(200).send({
       information: 'Notification has been updated',
       notification: notificationUpdated
+    })
+  })
+}
+
+function changeState(req, res) {
+  let notificationId = req.params.notificationId
+  let notificationState = Notification.findOne({
+    id: notificationId
+  }).visited;
+
+
+  Notification.update({
+    "_id": notificationId
+  }, {
+    visited: !notificationState
+  }, (err, result) => {
+    if (err) return res.status(500).send({
+      information: 'Error at change state: ' + err.message
+    })
+    if (result.nModified == 0) return res.status(404).send({
+      information: 'Notification not found'
+    })
+    res.status(200).send({
+      information: 'The state of notification has been changed',
+      result: result
     })
   })
 }

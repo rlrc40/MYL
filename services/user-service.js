@@ -6,6 +6,7 @@ service.create = validateUser
 service.getAll = getAll
 service.getById = getById
 service.getUsersByGroupId = getUsersByGroupId
+service.getUsersByEventId = getUsersByEventId
 service.getUserConnections = getUserConnections
 service.findUsersBySearch = findUsersBySearch
 service.findUserByName = findUserByName
@@ -51,6 +52,7 @@ function create(req, res) {
   user.level = 0
   user.languageLevel = 0
   user.groups = []
+  user.events = []
   user.connections = []
   user.connectionRequests = []
   user.myConnectionRequests = []
@@ -181,6 +183,20 @@ function getUsersByGroupId(req, res) {
   let groupId = req.params.groupId
   User.find({
     groups: groupId
+  }, (err, users) => {
+    if (err) return res.status(500).send(err.name + ': ' + err.message)
+    if (!users) return res.status(404).send({
+      message: "Users not found"
+    })
+
+    res.status(200).send(users)
+  })
+}
+
+function getUsersByEventId(req, res) {
+  let eventId = req.params.eventId
+  User.find({
+    events: eventId
   }, (err, users) => {
     if (err) return res.status(500).send(err.name + ': ' + err.message)
     if (!users) return res.status(404).send({

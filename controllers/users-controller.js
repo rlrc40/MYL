@@ -12,6 +12,7 @@ router.post('/filter', findUsersByFilter)
 router.get('/', getAll)
 router.get('/:userId', getById)
 router.get('/group/:groupId', getUsersByGroupId)
+router.get('/event/:eventId', getUsersByEventId)
 router.get('/connections/:userId', getUserConnections)
 router.put('/add-connection/:userId', addConnection)
 router.put('/remove-connection/:userId', removeConnection)
@@ -49,6 +50,10 @@ function getById(req, res) {
 
 function getUsersByGroupId(req, res) {
     userService.getUsersByGroupId(req, res)
+}
+
+function getUsersByEventId(req, res) {
+    userService.getUsersByEventId(req, res)
 }
 
 function getUserConnections(req, res) {

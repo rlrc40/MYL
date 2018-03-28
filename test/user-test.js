@@ -299,6 +299,33 @@ describe('Users', () => {
     })
   })
 
+  describe('/GET/:eventId users', () => {
+    it('it should GET users by the given id event', (done) => {
+      let user = getUser('test4@email.xom')
+      user.save((err, user) => {
+        user.update({
+          events: ['5a7efd9a94aaa318b4141f5b']
+        }, (err, user) => {
+          let user2 = getUser('test2@email.xom')
+          user2.save((err, user) => {
+            user.update({
+              events: ['5a7efd9a94aaa318b4141f5b']
+            }, (err, user) => {
+              chai.request(server)
+                .get('/users/event/5a7efd9a94aaa318b4141f5b')
+                .end((err, res) => {
+                  res.should.have.status(200)
+                  res.body.should.be.a('array')
+                  res.body.length.should.be.eql(2)
+                  done()
+                })
+            })
+          })
+        })
+      })
+    })
+  })
+
   describe('/GET users connections', () => {
     it('it should GET all the connections given id user', (done) => {
       let user = getUser('test@email.xom')
