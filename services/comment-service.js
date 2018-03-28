@@ -132,7 +132,7 @@ function updateParent(parentId, childId) {
         if (!parentUpdated) return res.status(404).send({
           message: 'Parent not found'
         })
-        console.log('Parent updated:' + parentUpdated)
+        return 'Parent updated:' + parentUpdated
     })
 }
 
